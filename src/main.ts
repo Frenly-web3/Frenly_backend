@@ -3,6 +3,7 @@ import { Connection } from 'typeorm';
 import { AppModule } from './app.module';
 
 import { ApiConfigService } from './infrastructure/config/api-config.service';
+import { BlockSubscriberService } from './services/block-subscriber.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,6 +17,9 @@ async function bootstrap() {
   } catch (e) {
     process.exit(e);
   }
+
+  const blockSubscriber = app.get(BlockSubscriberService);
+  await blockSubscriber.subscribe();
 
   app.setGlobalPrefix('api');
   app.enableCors();
