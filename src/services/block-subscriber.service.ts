@@ -1,5 +1,6 @@
 /* eslint-disable no-continue */
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import moment from 'moment';
 import Web3 from 'web3';
 
 import { ApiConfigService } from '../infrastructure/config/api-config.service';
@@ -115,8 +116,8 @@ export class BlockSubscriberService {
           blockNumber: blockHeader.number,
         };
 
-        const creationDate = new Date(blockHeader.timestamp);
-        const updateDate = new Date(blockHeader.timestamp);
+        const creationDate = moment.unix(Number(blockHeader.timestamp)).toDate();
+        const updateDate = moment.unix(Number(blockHeader.timestamp)).toDate();
 
         await this.userContentRepository.createTokenTransferContent(
           transactionMember.id,
