@@ -32,7 +32,7 @@ export class BaseNFTContract {
     }
   }
 
-  public async ERC721tokenURI(tokenId: number): Promise<string> {
+  public async ERC721tokenURI(tokenId: number | string): Promise<string> {
     try {
       const uri = await this.contract.methods.tokenURI(tokenId).call();
       return uri;

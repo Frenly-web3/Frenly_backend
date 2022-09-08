@@ -1,6 +1,6 @@
 import { ERCTokenEnum } from '../../../infrastructure/config/enums/erc-tokens.enum';
 
-export class IERCTransferData {
+export interface IERCTransferData {
   transactionHash: string;
 
   logIndex: number;
