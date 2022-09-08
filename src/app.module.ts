@@ -9,6 +9,8 @@ import { ApiConfigService } from './infrastructure/config/api-config.service';
 import { HttpExceptionFilter } from './infrastructure/middlewares/filters/http-exception.filter';
 import { ApiResponseInterceptor } from './infrastructure/middlewares/interceptors/api-response.interceptor';
 
+import { BlockSubscriberService } from './services/block-subscriber.service';
+
 @Module({
   imports: [
     ApiConfigModule,
@@ -35,6 +37,8 @@ import { ApiResponseInterceptor } from './infrastructure/middlewares/interceptor
       provide: APP_INTERCEPTOR,
       useValue: new ApiResponseInterceptor(),
     },
+
+    BlockSubscriberService,
   ],
 })
 export class AppModule {}
