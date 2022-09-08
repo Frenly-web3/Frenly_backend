@@ -11,6 +11,10 @@ import { ApiResponseInterceptor } from './infrastructure/middlewares/interceptor
 
 import { BlockSubscriberService } from './services/block-subscriber.service';
 
+import { TokenTransfersContentRepository } from './repository/token-transfer-content.repository';
+import { UserContentRepository } from './repository/user-content.repository';
+import { UserRepository } from './repository/user.repository';
+
 @Module({
   imports: [
     ApiConfigModule,
@@ -21,6 +25,9 @@ import { BlockSubscriberService } from './services/block-subscriber.service';
     }),
   ],
   providers: [
+    TokenTransfersContentRepository,
+    UserContentRepository,
+    UserRepository,
     {
       provide: APP_PIPE,
       useValue: new ValidationPipe({

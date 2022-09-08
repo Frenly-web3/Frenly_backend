@@ -1,13 +1,18 @@
 /* eslint-disable no-continue */
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import Web3 from 'web3';
 
 import { ApiConfigService } from '../infrastructure/config/api-config.service';
+
+import { UserRepository } from '../repository/user.repository';
+import { UserContentRepository } from '../repository/user-content.repository';
+import { ProcessedBlocksRepository } from '../repository/processed-blocks.repository';
 
 import { BaseNFTContractFactory } from './utils/base-nft-contract.factory';
 
 import { ETHMethods } from '../infrastructure/config/const/eth-methods.const';
 import { Hex } from '../infrastructure/config/const/hex-const';
+import { ErrorMessages } from '../infrastructure/config/const/error-messages.const';
 
 import { ERCTokenEnum } from '../infrastructure/config/enums/erc-tokens.enum';
 
@@ -15,6 +20,11 @@ import { IBlockHeader } from './interfaces/blocks/block-header.interface';
 import { IERCTransferData } from './interfaces/tokens/erc-transfer-data.interface';
 import { ITransactionLog } from './interfaces/transactions/transaction-log.interface';
 import { ITransactionReceipt } from './interfaces/transactions/transaction-receipt.interface';
+
+import { ProcessedBlocksEntity } from '../data/entity/processed-blocks.entity';
+
+import { TokenTransferContentDto } from '../dto/token-transfers/token-transfer-content.dto';
+import { SubscriptionServiceStatus } from '../dto/subscription-service/subscription-service-status.dto';
 
 @Injectable()
 export class BlockSubscriberService {
@@ -24,21 +34,43 @@ export class BlockSubscriberService {
 
   private readonly baseNFTContractFactory: BaseNFTContractFactory;
 
+  private isSubscribed = false;
+
   constructor(
     private readonly configService: ApiConfigService,
+
+    private readonly userRepository: UserRepository,
+    private readonly userContentRepository: UserContentRepository,
+    private readonly processedBlockRepository: ProcessedBlocksRepository,
   ) {
     this.ETH_PROVIDER = configService.infuraWebSocketProvider;
     this.web3 = new Web3(this.ETH_PROVIDER);
     this.baseNFTContractFactory = new BaseNFTContractFactory(this.ETH_PROVIDER);
   }
 
+  public async status(): Promise<SubscriptionServiceStatus> {
+    return { isSubscribed: this.isSubscribed };
+  }
+
   public async subscribe(): Promise<void> {
+    if (this.isSubscribed) {
+      throw new BadRequestException(ErrorMessages.ALREADY_SUBSCRIBED);
+    }
+
+    this.isSubscribed = true;
+
     this.web3.eth.subscribe('newBlockHeaders')
-      .on('data', this.onNewBlockHeader.bind(this))
+      .on('data', this.onBlockHeader.bind(this))
       .on('error', this.unsubscribe);
   }
 
   public async unsubscribe(error: Error): Promise<void> {
+    if (!this.isSubscribed) {
+      throw new BadRequestException(ErrorMessages.NOT_SUBSCRIBED);
+    }
+
+    this.isSubscribed = false;
+
     if (error != null) {
       console.log(error);
     }
@@ -46,12 +78,47 @@ export class BlockSubscriberService {
     this.web3.eth.clearSubscriptions(null);
   }
 
-  private async onNewBlockHeader(blockHeader: IBlockHeader): Promise<void> {
+  // Main service logic
+
+  private async onBlockHeader(blockHeader: IBlockHeader): Promise<void> {
     const transactions = await this.getTransactionsFromBlockHeader(blockHeader);
     const transferLogs = await this.getERCTransferLogs(transactions);
-    const transferData = await this.getERCTransfersData(transferLogs);
+    const transfersData = await this.getERCTransfersData(transferLogs);
 
-    console.log(transferData);
+    await this.matchAndSaveUsersTransfers(blockHeader, transfersData);
+
+    await this.processedBlockRepository.create(blockHeader.number, blockHeader.timestamp);
+  }
+
+  private async matchAndSaveUsersTransfers(blockHeader: IBlockHeader, transfers: IERCTransferData[]): Promise<void> {
+    const users = await this.userRepository.getAll();
+
+    for (const data of transfers) {
+      const transactionMember = users.find((x) => x.walletAddress === data.fromAddress || x.walletAddress === data.toAddress);
+
+      if (transactionMember != null) {
+        const content: TokenTransferContentDto = {
+          transactionHash: data.transactionHash,
+          fromAddress: data.fromAddress,
+          toAddress: data.toAddress,
+          smartContractAddress: data.contractAddress,
+          tokenHash: data.tokenId.toString(),
+          tokenType: data.type,
+          blockNumber: blockHeader.number,
+        };
+
+        const creationDate = new Date(blockHeader.timestamp);
+        const updateDate = new Date(blockHeader.timestamp);
+
+        await this.userContentRepository.createTokenTransferContent(
+          transactionMember.id,
+          content,
+
+          creationDate,
+          updateDate,
+        );
+      }
+    }
   }
 
   private async getTransactionsFromBlockHeader(blockHeader: IBlockHeader): Promise<ITransactionReceipt[]> {
@@ -70,7 +137,7 @@ export class BlockSubscriberService {
     const transferLogs: ITransactionLog[] = [];
 
     for (const transaction of transactions) {
-      for (const log of transaction.logs ?? []) {
+      for (const log of transaction?.logs ?? []) {
         const methodTopic = log.topics[0];
 
         const baseContract = this.baseNFTContractFactory.createBaseContract(log.address);
@@ -107,10 +174,51 @@ export class BlockSubscriberService {
     return ERCTransfers;
   }
 
+  // On exception logic
+  // // Fetch job
+
+  public async fetchMissedBlocks(): Promise<void> {
+    const totalBlocks = await this.processedBlockRepository.getAll();
+
+    if (totalBlocks.length === 0 || totalBlocks.length === 1) {
+      return;
+    }
+
+    const missedBlockNumbers = await this.getMissedBlocksNumbers(totalBlocks);
+
+    if (missedBlockNumbers.length === 0) {
+      return;
+    }
+
+    for (const missedBlockNumber of missedBlockNumbers) {
+      const missedBlock = await this.web3.eth.getBlock(missedBlockNumber);
+      await this.onBlockHeader(missedBlock);
+    }
+  }
+
+  private async getMissedBlocksNumbers(totalBlocks: ProcessedBlocksEntity[]): Promise<number[]> {
+    const missedBlocks: number[] = [];
+
+    for (let blockIndex = 0; blockIndex < totalBlocks.length - 1; blockIndex += 1) {
+      const blocksDistance = totalBlocks[blockIndex + 1].blockNumber - totalBlocks[blockIndex].blockNumber;
+
+      if (blocksDistance > 1) {
+        const fromBlock = totalBlocks[blockIndex].blockNumber + 1;
+        const toBlock = totalBlocks[blockIndex + 1].blockNumber;
+
+        for (let blockNumber = fromBlock; blockNumber < toBlock; blockNumber += 1) {
+          missedBlocks.push(blockNumber);
+        }
+      }
+    }
+
+    return missedBlocks;
+  }
+
   // Mapping methods
 
   private async transactionLogToERC721TransferData(transactionLog: ITransactionLog): Promise<IERCTransferData> {
-    const tokenId = this.web3.utils.hexToNumber(transactionLog.topics[3]);
+    const tokenId = this.web3.utils.hexToNumberString(transactionLog.topics[3]);
 
     const baseContract = this.baseNFTContractFactory.createBaseContract(transactionLog.address);
 
