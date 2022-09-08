@@ -1,5 +1,5 @@
 /* eslint-disable no-continue */
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import Web3 from 'web3';
 
 import { ApiConfigService } from '../infrastructure/config/api-config.service';
@@ -34,6 +34,8 @@ export class BlockSubscriberService {
 
   private readonly baseNFTContractFactory: BaseNFTContractFactory;
 
+  private readonly logger: Logger;
+
   private isSubscribed = false;
 
   constructor(
@@ -46,6 +48,8 @@ export class BlockSubscriberService {
     this.ETH_PROVIDER = configService.infuraWebSocketProvider;
     this.web3 = new Web3(this.ETH_PROVIDER);
     this.baseNFTContractFactory = new BaseNFTContractFactory(this.ETH_PROVIDER);
+
+    this.logger = new Logger();
   }
 
   public async status(): Promise<SubscriptionServiceStatus> {
@@ -72,7 +76,9 @@ export class BlockSubscriberService {
     this.isSubscribed = false;
 
     if (error != null) {
-      console.log(error);
+      this.logger.error(error);
+    } else {
+      this.logger.warn('Service was unsubscribed without error provided. It was possible user interactions');
     }
 
     this.web3.eth.clearSubscriptions(null);
@@ -88,6 +94,8 @@ export class BlockSubscriberService {
     await this.matchAndSaveUsersTransfers(blockHeader, transfersData);
 
     await this.processedBlockRepository.create(blockHeader.number, blockHeader.timestamp);
+
+    this.logger.log(`Processed ${blockHeader.number} block completely`);
   }
 
   private async matchAndSaveUsersTransfers(blockHeader: IBlockHeader, transfers: IERCTransferData[]): Promise<void> {
@@ -117,6 +125,10 @@ export class BlockSubscriberService {
           creationDate,
           updateDate,
         );
+
+        this.logger.log(`
+          Found and added user (${transactionMember.walletAddress}) action at block: ${blockHeader.number}. Token id: ${data.tokenId}
+        `);
       }
     }
   }
@@ -178,15 +190,21 @@ export class BlockSubscriberService {
   // // Fetch job
 
   public async fetchMissedBlocks(): Promise<void> {
+    this.logger.log('Start fetching missing blocks');
+
     const totalBlocks = await this.processedBlockRepository.getAll();
 
     if (totalBlocks.length === 0 || totalBlocks.length === 1) {
+      this.logger.log("System doesn't process any block yet. Stop fetching successfully");
+
       return;
     }
 
     const missedBlockNumbers = await this.getMissedBlocksNumbers(totalBlocks);
 
     if (missedBlockNumbers.length === 0) {
+      this.logger.log('No missed blocks found. Stop fetching successfully');
+
       return;
     }
 
@@ -194,6 +212,8 @@ export class BlockSubscriberService {
       const missedBlock = await this.web3.eth.getBlock(missedBlockNumber);
       await this.onBlockHeader(missedBlock);
     }
+
+    this.logger.log(`Fetched ${missedBlockNumbers.length} missing blocks. Stop fetching successfully`);
   }
 
   private async getMissedBlocksNumbers(totalBlocks: ProcessedBlocksEntity[]): Promise<number[]> {
