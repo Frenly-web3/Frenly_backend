@@ -109,24 +109,28 @@ export class AuthenticationService {
   }
 
   private async recoverSignature(nonce: number, signature: string): Promise<string> {
-    const message = `Nonce: ${nonce}`;
-    const messageHex = bufferToHex(Buffer.from(message));
+    try {
+      const message = `Nonce: ${nonce}`;
+      const messageHex = bufferToHex(Buffer.from(message));
 
-    const messageBuffer = toBuffer(messageHex);
-    const messageHash = hashPersonalMessage(messageBuffer);
+      const messageBuffer = toBuffer(messageHex);
+      const messageHash = hashPersonalMessage(messageBuffer);
 
-    const signatureParams = fromRpcSig(signature);
+      const signatureParams = fromRpcSig(signature);
 
-    const publicKey = ecrecover(
-      messageHash,
-      signatureParams.v,
-      signatureParams.r,
-      signatureParams.s,
-    );
+      const publicKey = ecrecover(
+        messageHash,
+        signatureParams.v,
+        signatureParams.r,
+        signatureParams.s,
+      );
 
-    const addressBuffer = publicToAddress(publicKey);
-    const address = bufferToHex(addressBuffer);
+      const addressBuffer = publicToAddress(publicKey);
+      const address = bufferToHex(addressBuffer);
 
-    return address;
+      return address;
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
   }
 }
