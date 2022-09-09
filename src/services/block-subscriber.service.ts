@@ -66,7 +66,7 @@ export class BlockSubscriberService {
 
     this.web3.eth.subscribe('newBlockHeaders')
       .on('data', this.onBlockHeader.bind(this))
-      .on('error', this.unsubscribe);
+      .on('error', this.unsubscribe.bind(this));
   }
 
   public async unsubscribe(error: Error): Promise<void> {
