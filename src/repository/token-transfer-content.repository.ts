@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { Connection, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 import { TokenTransfersContentEntity } from '../data/entity/token-transfers-content.entity';
 
@@ -12,7 +12,7 @@ export class TokenTransfersContentRepository {
 
   constructor(
     @InjectDataSource()
-    private readonly connection: Connection,
+    private readonly connection: DataSource,
   ) {
     this.repository = connection.getRepository(TokenTransfersContentEntity);
   }

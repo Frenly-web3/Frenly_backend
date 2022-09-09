@@ -46,6 +46,22 @@ export class ApiConfigService {
     };
   }
 
+  // JWT Preferences
+
+  get accessTokenSecret(): string {
+    return this.configService.get<string>('ACCESS_TOKEN_SECRET');
+  }
+
+  // // In MS
+  get accessTokenExpirationTime(): number {
+    return Number(this.configService.get<number>('ACCESS_TOKEN_EXPIRATION_TIME'));
+  }
+
+  // // In MS
+  get refreshTokenExpirationTime(): number {
+    return Number(this.configService.get<number>('REFRESH_TOKEN_EXPIRATION_TIME'));
+  }
+
   // Web3 Preferences
 
   get infuraWebSocketProvider(): string {

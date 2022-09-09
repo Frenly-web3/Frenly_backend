@@ -1,5 +1,5 @@
 import { InjectDataSource } from '@nestjs/typeorm';
-import { Connection, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 import { UserRepository } from './user.repository';
 import { TokenTransfersContentRepository } from './token-transfer-content.repository';
@@ -15,7 +15,7 @@ export class UserContentRepository {
 
   constructor(
     @InjectDataSource()
-    private readonly connection: Connection,
+    private readonly connection: DataSource,
 
     private readonly userRepository: UserRepository,
 
