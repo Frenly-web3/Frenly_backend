@@ -39,6 +39,8 @@ export class BlockSubscriberService {
 
   private isSubscribed = false;
 
+  private currentSubscription = null;
+
   constructor(
     private readonly configService: ApiConfigService,
 
@@ -64,9 +66,11 @@ export class BlockSubscriberService {
 
     this.isSubscribed = true;
 
-    this.web3.eth.subscribe('newBlockHeaders')
+    const subscription = this.web3.eth.subscribe('newBlockHeaders')
       .on('data', this.onBlockHeader.bind(this))
       .on('error', this.unsubscribe.bind(this));
+
+    this.currentSubscription = subscription;
   }
 
   public async unsubscribe(error: Error): Promise<void> {
@@ -82,7 +86,8 @@ export class BlockSubscriberService {
       this.logger.warn('Service was unsubscribed without error provided. It was possible user interactions');
     }
 
-    this.web3.eth.clearSubscriptions(null);
+    await this.currentSubscription.unsubscribe();
+    this.currentSubscription = null;
   }
 
   // Main service logic
