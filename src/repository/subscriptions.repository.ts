@@ -28,4 +28,15 @@ export class SubscriptionsRepository {
 
     return subscriptions.map((x) => x.respondent);
   }
+
+  public async createSubscription(respondent: UserEntity, subscriber: UserEntity): Promise<SubscriptionEntity> {
+    const entity = this.repository.create({
+      respondent,
+      subscriber,
+    });
+
+    await this.repository.save(entity);
+
+    return entity;
+  }
 }

@@ -27,6 +27,7 @@ import { AuthenticationService } from './services/authentication.service';
 import { CurrentUserService } from './services/current-user.service';
 import { ContentService } from './services/content.service';
 import { StatsService } from './services/stats.service';
+import { UserService } from './services/user.service';
 
 import { TokenTransfersContentRepository } from './repository/token-transfer-content.repository';
 import { UserContentRepository } from './repository/user-content.repository';
@@ -39,6 +40,7 @@ import { BlockSubscriberController } from './controller/block-subscriber.control
 import { AuthenticationController } from './controller/authentication.controller';
 import { ContentController } from './controller/content.controller';
 import { StatsController } from './controller/stats.controller';
+import { UserController } from './controller/user.controller';
 
 @Module({
   imports: [
@@ -71,6 +73,7 @@ import { StatsController } from './controller/stats.controller';
     AuthenticationController,
     ContentController,
     StatsController,
+    UserController,
   ],
   providers: [
     {
@@ -97,6 +100,7 @@ import { StatsController } from './controller/stats.controller';
     CurrentUserService,
     ContentService,
     StatsService,
+    UserService,
 
     JwtStrategy,
 
