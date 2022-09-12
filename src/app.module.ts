@@ -20,6 +20,8 @@ import { ApiConfigService } from './infrastructure/config/api-config.service';
 import { HttpExceptionFilter } from './infrastructure/middlewares/filters/http-exception.filter';
 import { ApiResponseInterceptor } from './infrastructure/middlewares/interceptors/api-response.interceptor';
 
+import { MapperProfile } from './infrastructure/mapper/profile.mapper';
+
 import { BlockSubscriberService } from './services/block-subscriber.service';
 import { CronService } from './services/cron.service';
 import { ApiJWTService } from './services/jwt.service';
@@ -103,6 +105,8 @@ import { UserController } from './controller/user.controller';
     UserService,
 
     JwtStrategy,
+
+    MapperProfile,
 
     TokenTransfersContentRepository,
     UserContentRepository,

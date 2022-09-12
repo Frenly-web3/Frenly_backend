@@ -1,5 +1,5 @@
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Like, Repository } from 'typeorm';
 
 import { UserEntity } from '../data/entity/user.entity';
 
@@ -15,8 +15,15 @@ export class UserRepository {
     this.repository = connection.getRepository(UserEntity);
   }
 
-  public async getAll(): Promise<UserEntity[]> {
-    return this.repository.find();
+  public async getAll(searchString?: string, take?: number, skip?: number): Promise<UserEntity[]> {
+    return this.repository.find({
+      where: {
+        walletAddress: Like(`%${searchString}%`),
+      },
+
+      take,
+      skip,
+    });
   }
 
   public async getOneById(userId: number): Promise<UserEntity> {
