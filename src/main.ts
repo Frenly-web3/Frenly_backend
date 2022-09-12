@@ -18,8 +18,8 @@ async function bootstrap() {
     process.exit(e);
   }
 
-  // const blockSubscriber = app.get(BlockSubscriberService);
-  // await blockSubscriber.subscribe();
+  const blockSubscriber = app.get(BlockSubscriberService);
+  await blockSubscriber.subscribe();
 
   app.setGlobalPrefix('api');
   app.enableCors();
