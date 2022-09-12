@@ -50,6 +50,8 @@ export class ContentService {
     return this.mapUserContent(contents);
   }
 
+  // Mapping methods
+
   private mapUserContent(contents: UserContentEntity[]): UserContentDto[] {
     const result: UserContentDto[] = [];
 

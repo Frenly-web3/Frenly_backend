@@ -26,6 +26,7 @@ import { ApiJWTService } from './services/jwt.service';
 import { AuthenticationService } from './services/authentication.service';
 import { CurrentUserService } from './services/current-user.service';
 import { ContentService } from './services/content.service';
+import { StatsService } from './services/stats.service';
 
 import { TokenTransfersContentRepository } from './repository/token-transfer-content.repository';
 import { UserContentRepository } from './repository/user-content.repository';
@@ -37,6 +38,7 @@ import { SubscriptionsRepository } from './repository/subscriptions.repository';
 import { BlockSubscriberController } from './controller/block-subscriber.controller';
 import { AuthenticationController } from './controller/authentication.controller';
 import { ContentController } from './controller/content.controller';
+import { StatsController } from './controller/stats.controller';
 
 @Module({
   imports: [
@@ -68,6 +70,7 @@ import { ContentController } from './controller/content.controller';
     BlockSubscriberController,
     AuthenticationController,
     ContentController,
+    StatsController,
   ],
   providers: [
     {
@@ -93,6 +96,7 @@ import { ContentController } from './controller/content.controller';
     AuthenticationService,
     CurrentUserService,
     ContentService,
+    StatsService,
 
     JwtStrategy,
 
