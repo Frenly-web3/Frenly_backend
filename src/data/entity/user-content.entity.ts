@@ -26,5 +26,5 @@ export class UserContentEntity {
     updateDate: Date;
 
   // Non-column properties
-  userContent: TokenTransfersContentEntity[];
+  userContent: TokenTransfersContentEntity;
 }

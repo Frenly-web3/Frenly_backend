@@ -1,6 +1,9 @@
 import { MiddlewareConsumer, Module, NestModule, ValidationPipe } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 
+import { AutomapperModule } from '@automapper/nestjs';
+import { classes } from '@automapper/classes';
+
 import { ScheduleModule } from '@nestjs/schedule';
 
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -22,15 +25,18 @@ import { CronService } from './services/cron.service';
 import { ApiJWTService } from './services/jwt.service';
 import { AuthenticationService } from './services/authentication.service';
 import { CurrentUserService } from './services/current-user.service';
+import { ContentService } from './services/content.service';
 
 import { TokenTransfersContentRepository } from './repository/token-transfer-content.repository';
 import { UserContentRepository } from './repository/user-content.repository';
 import { UserRepository } from './repository/user.repository';
 import { ProcessedBlocksRepository } from './repository/processed-blocks.repository';
 import { RefreshTokenRepository } from './repository/refresh-token.repository';
+import { SubscriptionsRepository } from './repository/subscriptions.repository';
 
 import { BlockSubscriberController } from './controller/block-subscriber.controller';
 import { AuthenticationController } from './controller/authentication.controller';
+import { ContentController } from './controller/content.controller';
 
 @Module({
   imports: [
@@ -54,10 +60,14 @@ import { AuthenticationController } from './controller/authentication.controller
       }),
       inject: [ApiConfigService],
     }),
+    AutomapperModule.forRoot({
+      strategyInitializer: classes(),
+    }),
   ],
   controllers: [
     BlockSubscriberController,
     AuthenticationController,
+    ContentController,
   ],
   providers: [
     {
@@ -82,6 +92,7 @@ import { AuthenticationController } from './controller/authentication.controller
     ApiJWTService,
     AuthenticationService,
     CurrentUserService,
+    ContentService,
 
     JwtStrategy,
 
@@ -90,6 +101,7 @@ import { AuthenticationController } from './controller/authentication.controller
     UserRepository,
     ProcessedBlocksRepository,
     RefreshTokenRepository,
+    SubscriptionsRepository,
   ],
 })
 export class AppModule implements NestModule {

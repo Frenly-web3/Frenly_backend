@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 
 import { TokenTransfersContentEntity } from '../data/entity/token-transfers-content.entity';
 
@@ -15,6 +15,10 @@ export class TokenTransfersContentRepository {
     private readonly connection: DataSource,
   ) {
     this.repository = connection.getRepository(TokenTransfersContentEntity);
+  }
+
+  public async getWithIds(ids: number[]): Promise<TokenTransfersContentEntity[]> {
+    return this.repository.find({ where: { id: In(ids) } });
   }
 
   public async create(data: TokenTransferContentDto): Promise<TokenTransfersContentEntity> {
