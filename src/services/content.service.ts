@@ -72,6 +72,7 @@ export class ContentService {
         tokenTransferContent.smartContractAddress = tokenContentEntity.smartContractAddress;
         tokenTransferContent.tokenId = tokenContentEntity.tokenId;
         tokenTransferContent.transactionHash = tokenContentEntity.transactionHash;
+        tokenTransferContent.metadataUri = tokenContentEntity.metadataUri;
 
         tokenTransferContent.tokenType = ERCTokenEnum[tokenContentEntity.tokenType];
 

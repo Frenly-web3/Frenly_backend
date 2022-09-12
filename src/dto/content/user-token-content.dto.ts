@@ -12,4 +12,6 @@ export class UserTokenContentDto {
   toAddress: string;
 
   smartContractAddress: string;
+
+  metadataUri?: string;
 }

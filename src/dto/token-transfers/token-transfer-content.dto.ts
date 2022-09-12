@@ -13,5 +13,7 @@ export class TokenTransferContentDto {
 
   tokenType: ERCTokenEnum;
 
+  metadataUri: string;
+
   blockNumber: number;
 }

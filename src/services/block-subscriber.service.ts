@@ -118,6 +118,7 @@ export class BlockSubscriberService {
           smartContractAddress: data.contractAddress,
           tokenId: data.tokenId.toString(),
           tokenType: data.type,
+          metadataUri: data.tokenURI,
           blockNumber: blockHeader.number,
         };
 
