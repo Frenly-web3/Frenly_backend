@@ -18,7 +18,7 @@ export class TokenTransfersContentEntity {
   @Column({ name: 'smart_contract_address' })
     smartContractAddress: string;
 
-  @Column({ name: 'token_hash' })
+  @Column({ name: 'token_id' })
     tokenId: string;
 
   @Column({ name: 'token_type', enum: ERCTokenEnum })
