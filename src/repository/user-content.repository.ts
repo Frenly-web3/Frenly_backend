@@ -1,5 +1,5 @@
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 
 import { UserRepository } from './user.repository';
 import { TokenTransfersContentRepository } from './token-transfer-content.repository';
@@ -24,6 +24,46 @@ export class UserContentRepository {
     this.repository = connection.getRepository(UserContentEntity);
   }
 
+  public async getContentByUserId(userId: number): Promise<UserContentEntity[]> {
+    let content = await this.repository.find({
+      where: {
+        owner: {
+          id: userId,
+        },
+      },
+
+      order: {
+        creationDate: 'DESC',
+      },
+
+      relations: ['owner'],
+    });
+
+    content = await this.loadTokenTransfers(content);
+
+    return content;
+  }
+
+  public async getContentByUserManyIds(userIds: number[]): Promise<UserContentEntity[]> {
+    let content = await this.repository.find({
+      where: {
+        owner: {
+          id: In(userIds),
+        },
+      },
+
+      order: {
+        creationDate: 'DESC',
+      },
+
+      relations: ['owner'],
+    });
+
+    content = await this.loadTokenTransfers(content);
+
+    return content;
+  }
+
   public async createTokenTransferContent(
     userId: number,
     contentData: TokenTransferContentDto,
@@ -44,5 +84,23 @@ export class UserContentRepository {
     });
 
     await this.repository.save(contentEntity);
+  }
+
+  private async loadTokenTransfers(contents: UserContentEntity[]): Promise<UserContentEntity[]> {
+    const transferContentIds = contents
+      .filter((x) => x.childEntityType === UserContentType.TOKEN_TRANSFER)
+      .map((x) => x.childEntityId);
+
+    const tokenTransfers = await this.tokenTransferRepository.getWithIds(transferContentIds);
+
+    for (const content of contents) {
+      if (content.childEntityType === UserContentType.TOKEN_TRANSFER) {
+        const transfer = tokenTransfers.find((x) => x.id === content.childEntityId);
+
+        content.userContent = transfer;
+      }
+    }
+
+    return contents;
   }
 }

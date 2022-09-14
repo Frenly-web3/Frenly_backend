@@ -9,9 +9,11 @@ export class TokenTransferContentDto {
 
   smartContractAddress: string;
 
-  tokenHash: string;
+  tokenId: string;
 
   tokenType: ERCTokenEnum;
+
+  metadataUri: string;
 
   blockNumber: number;
 }
