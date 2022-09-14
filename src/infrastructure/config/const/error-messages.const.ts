@@ -1,6 +1,8 @@
 export class ErrorMessages {
   public static readonly USER_NOT_FOUND = 'This user does not exists';
 
+  public static readonly NO_LENS_PROFILE = 'This user does not have lens-protocol profile';
+
   public static readonly INVALID_SIGNATURE = 'Invalid signature provided for this address';
 
   public static readonly INVALID_TOKEN = 'Invalid token provided';

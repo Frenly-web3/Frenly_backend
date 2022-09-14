@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { CurrentUserService } from './current-user.service';
 
@@ -46,6 +46,10 @@ export class ContentService {
 
     if (currentUser == null) {
       throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
+
+    if (!currentUser.hasLensProfile) {
+      throw new BadRequestException(ErrorMessages.NO_LENS_PROFILE);
     }
 
     const content = await this.contentRepository.getUnpublishedContentById(contentId);
