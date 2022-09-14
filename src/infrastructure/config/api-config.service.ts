@@ -67,4 +67,8 @@ export class ApiConfigService {
   get infuraWebSocketProvider(): string {
     return this.configService.get<string>('INFURA_WEB_SOCKET_PROVIDER');
   }
+
+  get lensContractAddress(): string {
+    return this.configService.get<string>('LENS_CONTRACT_ADDRESS');
+  }
 }
