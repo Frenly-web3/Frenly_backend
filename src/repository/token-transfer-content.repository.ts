@@ -27,4 +27,10 @@ export class TokenTransfersContentRepository {
 
     return transferContent;
   }
+
+  public async save(data: TokenTransfersContentEntity): Promise<TokenTransfersContentEntity> {
+    await this.repository.save(data);
+
+    return data;
+  }
 }

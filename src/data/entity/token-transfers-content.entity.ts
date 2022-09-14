@@ -1,5 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+
 import { ERCTokenEnum } from '../../infrastructure/config/enums/erc-tokens.enum';
+import { TokenContentStatusEnum } from '../../infrastructure/config/enums/token-content-status.enum';
 
 @Entity('token_transfers_content')
 export class TokenTransfersContentEntity {
@@ -27,6 +29,12 @@ export class TokenTransfersContentEntity {
   @Column({ name: 'token_type', enum: ERCTokenEnum })
     tokenType: ERCTokenEnum;
 
+  @Column({ enum: TokenContentStatusEnum, default: TokenContentStatusEnum.UNPUBLISHED })
+    status: TokenContentStatusEnum;
+
   @Column({ name: 'block_number' })
     blockNumber: number;
+
+  @Column({ name: 'is_removed', default: false })
+    isRemoved: Boolean;
 }

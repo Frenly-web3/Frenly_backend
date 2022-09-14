@@ -4,12 +4,13 @@ import { CurrentUserService } from './current-user.service';
 
 import { UserRepository } from '../repository/user.repository';
 import { UserContentRepository } from '../repository/user-content.repository';
-import { SubscriptionsRepository } from '../repository/subscriptions.repository';
-
-import { ERCTokenEnum } from '../infrastructure/config/enums/erc-tokens.enum';
-import { UserContentType } from '../infrastructure/config/enums/user-content-type.enum';
+import { TokenTransfersContentRepository } from '../repository/token-transfer-content.repository';
 
 import { ErrorMessages } from '../infrastructure/config/const/error-messages.const';
+import { TransferTypes } from '../infrastructure/config/const/transfer-types.const';
+
+import { UserContentType } from '../infrastructure/config/enums/user-content-type.enum';
+import { TokenContentStatusEnum } from '../infrastructure/config/enums/token-content-status.enum';
 
 import { UserContentEntity } from '../data/entity/user-content.entity';
 
@@ -23,58 +24,82 @@ export class ContentService {
 
     private readonly userRepository: UserRepository,
     private readonly contentRepository: UserContentRepository,
-    private readonly subscriptionsRepository: SubscriptionsRepository,
+    private readonly tokenTransferContentRepository: TokenTransfersContentRepository,
   ) {}
 
-  public async getUserContent(walletAddress: string): Promise<UserContentDto[]> {
-    const user = await this.userRepository.getOneByWalletAddress(walletAddress);
+  public async getUnpublishedContent(): Promise<UserContentDto[]> {
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const currentUser = await this.userRepository.getOneByWalletAddress(walletAddress);
 
-    if (user == null) {
+    if (currentUser == null) {
       throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
     }
 
-    const content = await this.contentRepository.getContentByUserId(user.id);
+    const content = await this.contentRepository.getUnpublishedContent(currentUser.id);
 
-    return this.mapUserContent(content);
+    return this.mapUserContent(walletAddress, content);
   }
 
-  public async getUserSubscriptionsContent(): Promise<UserContentDto[]> {
+  public async publishContent(contentId: number): Promise<void> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-    const user = await this.userRepository.getOneByWalletAddress(walletAddress);
+    const currentUser = await this.userRepository.getOneByWalletAddress(walletAddress);
 
-    const respondents = await this.subscriptionsRepository.getUserRespondentsById(user.id);
-    const respondentIds = respondents.map((x) => x.id);
+    if (currentUser == null) {
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
 
-    const contents = await this.contentRepository.getContentByUserManyIds(respondentIds);
+    const content = await this.contentRepository.getUnpublishedContentById(contentId);
 
-    return this.mapUserContent(contents);
+    if (content == null || content.owner.id !== currentUser.id) {
+      throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
+    }
+
+    content.userContent.status = TokenContentStatusEnum.PUBLISHED;
+    await this.tokenTransferContentRepository.save(content.userContent);
+  }
+
+  public async removeContent(contentId: number): Promise<void> {
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const currentUser = await this.userRepository.getOneByWalletAddress(walletAddress);
+
+    if (currentUser == null) {
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
+
+    const content = await this.contentRepository.getUnpublishedContentById(contentId);
+
+    if (content == null || content.owner.id !== currentUser.id) {
+      throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
+    }
+
+    content.userContent.isRemoved = true;
+    await this.tokenTransferContentRepository.save(content.userContent);
   }
 
   // Mapping methods
 
-  private mapUserContent(contents: UserContentEntity[]): UserContentDto[] {
+  private mapUserContent(walletAddress: string, contents: UserContentEntity[]): UserContentDto[] {
     const result: UserContentDto[] = [];
+
+    walletAddress = walletAddress.toLowerCase();
 
     for (const content of contents) {
       const contentWrapper = new UserContentDto();
 
-      contentWrapper.walletAddress = content.owner.walletAddress;
       contentWrapper.creationDate = content.creationDate;
+      contentWrapper.id = content.id;
 
       if (content.childEntityType === UserContentType.TOKEN_TRANSFER) {
         const tokenTransferContent = new UserTokenContentDto();
 
         const tokenContentEntity = content.userContent;
 
-        tokenTransferContent.blockNumber = tokenContentEntity.blockNumber;
+        tokenTransferContent.transferType = walletAddress === tokenContentEntity.fromAddress ? TransferTypes.SEND : TransferTypes.RECEIVE;
         tokenTransferContent.fromAddress = tokenContentEntity.fromAddress;
         tokenTransferContent.toAddress = tokenContentEntity.toAddress;
-        tokenTransferContent.smartContractAddress = tokenContentEntity.smartContractAddress;
+        tokenTransferContent.contractAddress = tokenContentEntity.smartContractAddress;
         tokenTransferContent.tokenId = tokenContentEntity.tokenId;
-        tokenTransferContent.transactionHash = tokenContentEntity.transactionHash;
-        tokenTransferContent.metadataUri = tokenContentEntity.metadataUri;
-
-        tokenTransferContent.tokenType = ERCTokenEnum[tokenContentEntity.tokenType];
+        tokenTransferContent.tokenUri = tokenContentEntity.metadataUri;
 
         contentWrapper.content = tokenTransferContent;
       }

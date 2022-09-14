@@ -1,10 +1,10 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { ContentService } from '../services/content.service';
 
 import { UserContentDto } from '../dto/content/user-content.dto';
-import { WalletAddressDto } from '../dto/user/wallet-address.dto';
+import { ContentIdDto } from '../dto/content/content-id.dto';
 
 @Controller('content')
 export class ContentController {
@@ -12,16 +12,21 @@ export class ContentController {
     private readonly contentService: ContentService,
   ) {}
 
-  @Get('')
-  public async getUserContent(@Query() query: WalletAddressDto): Promise<UserContentDto[]> {
-    const { walletAddress } = query;
-
-    return this.contentService.getUserContent(walletAddress);
+  @Get('unpublished')
+  @UseGuards(AuthGuard())
+  public async getUnpublished(): Promise<UserContentDto[]> {
+    return this.contentService.getUnpublishedContent();
   }
 
-  @Get('/subscriptions')
+  @Post('/:contentId')
   @UseGuards(AuthGuard())
-  public async getUserSubscriptionsContent(): Promise<UserContentDto[]> {
-    return this.contentService.getUserSubscriptionsContent();
+  public async publishContent(@Param() { contentId }: ContentIdDto): Promise<void> {
+    return this.contentService.publishContent(contentId);
+  }
+
+  @Delete('/:contentId')
+  @UseGuards(AuthGuard())
+  public async removeContent(@Param() { contentId }: ContentIdDto): Promise<void> {
+    return this.contentService.removeContent(contentId);
   }
 }

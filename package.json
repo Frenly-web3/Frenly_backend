@@ -24,6 +24,8 @@
     "@automapper/classes": "^8.7.6",
     "@automapper/core": "^8.7.6",
     "@automapper/nestjs": "^8.7.6",
+    "@maticnetwork/maticjs": "^3.4.0",
+    "@maticnetwork/maticjs-web3": "^1.0.1",
     "@nestjs/common": "^8.0.0",
     "@nestjs/config": "^2.2.0",
     "@nestjs/core": "^8.0.0",

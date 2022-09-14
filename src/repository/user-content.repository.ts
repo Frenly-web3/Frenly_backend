@@ -1,5 +1,5 @@
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 import { UserRepository } from './user.repository';
 import { TokenTransfersContentRepository } from './token-transfer-content.repository';
@@ -9,6 +9,7 @@ import { UserContentEntity } from '../data/entity/user-content.entity';
 import { UserContentType } from '../infrastructure/config/enums/user-content-type.enum';
 
 import { TokenTransferContentDto } from '../dto/token-transfers/token-transfer-content.dto';
+import { TokenContentStatusEnum } from '../infrastructure/config/enums/token-content-status.enum';
 
 export class UserContentRepository {
   private readonly repository: Repository<UserContentEntity>;
@@ -24,7 +25,7 @@ export class UserContentRepository {
     this.repository = connection.getRepository(UserContentEntity);
   }
 
-  public async getContentByUserId(userId: number): Promise<UserContentEntity[]> {
+  public async getUnpublishedContent(userId: number): Promise<UserContentEntity[]> {
     let content = await this.repository.find({
       where: {
         owner: {
@@ -44,16 +45,10 @@ export class UserContentRepository {
     return content;
   }
 
-  public async getContentByUserManyIds(userIds: number[]): Promise<UserContentEntity[]> {
+  public async getUnpublishedContentById(id: number): Promise<UserContentEntity> {
     let content = await this.repository.find({
       where: {
-        owner: {
-          id: In(userIds),
-        },
-      },
-
-      order: {
-        creationDate: 'DESC',
+        id,
       },
 
       relations: ['owner'],
@@ -61,7 +56,7 @@ export class UserContentRepository {
 
     content = await this.loadTokenTransfers(content);
 
-    return content;
+    return content[0];
   }
 
   public async createTokenTransferContent(
@@ -87,6 +82,8 @@ export class UserContentRepository {
   }
 
   private async loadTokenTransfers(contents: UserContentEntity[]): Promise<UserContentEntity[]> {
+    const result: UserContentEntity[] = [];
+
     const transferContentIds = contents
       .filter((x) => x.childEntityType === UserContentType.TOKEN_TRANSFER)
       .map((x) => x.childEntityId);
@@ -95,12 +92,20 @@ export class UserContentRepository {
 
     for (const content of contents) {
       if (content.childEntityType === UserContentType.TOKEN_TRANSFER) {
-        const transfer = tokenTransfers.find((x) => x.id === content.childEntityId);
+        const transfer = tokenTransfers.find(
+          (x) => x.id === content.childEntityId
+          && x.status === TokenContentStatusEnum.UNPUBLISHED
+          && !x.isRemoved,
+        );
 
-        content.userContent = transfer;
+        if (transfer != null) {
+          content.userContent = transfer;
+
+          result.push(content);
+        }
       }
     }
 
-    return contents;
+    return result;
   }
 }

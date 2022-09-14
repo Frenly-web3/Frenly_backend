@@ -1,17 +1,13 @@
 export class UserTokenContentDto {
-  tokenId: string;
-
-  tokenType: string;
-
-  blockNumber: number;
-
-  transactionHash: string;
+  transferType: string;
 
   fromAddress: string;
 
   toAddress: string;
 
-  smartContractAddress: string;
+  tokenId: string;
 
-  metadataUri?: string;
+  contractAddress: string;
+
+  tokenUri: string;
 }

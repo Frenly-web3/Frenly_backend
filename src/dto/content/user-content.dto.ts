@@ -1,7 +1,7 @@
 import { UserTokenContentDto } from './user-token-content.dto';
 
 export class UserContentDto {
-  walletAddress: string;
+  id: number;
 
   creationDate: Date;
 
