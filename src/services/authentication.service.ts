@@ -1,7 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 
 import Web3 from 'web3';
+import { Contract } from 'web3-eth-contract';
 import { bufferToHex, ecrecover, fromRpcSig, hashPersonalMessage, publicToAddress, toBuffer } from 'ethereumjs-util';
+import { AbiItem } from 'web3-utils';
+import LensContractAbi from '../../lens-profile-proxy-abi.json';
 
 import { ApiConfigService } from '../infrastructure/config/api-config.service';
 import { ApiJWTService } from './jwt.service';
@@ -19,6 +22,8 @@ import { JwtPair } from '../dto/jwt/jwt-pair.dto';
 export class AuthenticationService {
   private readonly web3: Web3;
 
+  private readonly lensContract: Contract;
+
   constructor(
     private readonly configService: ApiConfigService,
 
@@ -28,7 +33,24 @@ export class AuthenticationService {
     private readonly userRepository: UserRepository,
     private readonly refreshTokenRepository: RefreshTokenRepository,
   ) {
-    this.web3 = new Web3(configService.infuraWebSocketProvider);
+    this.web3 = new Web3(configService.polygonTestnetHttpInfuraProvider);
+    this.lensContract = new this.web3.eth.Contract(LensContractAbi as AbiItem[], this.configService.lensContractAddress);
+  }
+
+  public async hasLensProfile(walletAddress: string): Promise<Boolean> {
+    walletAddress.toLowerCase();
+    const user = await this.userRepository.getOneByWalletAddress(walletAddress);
+
+    if (user == null) {
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
+
+    const lensProfiles = await this.lensContract.methods.balanceOf(walletAddress.toLowerCase()).call();
+
+    user.hasLensProfile = lensProfiles !== 0;
+    this.userRepository.save(user);
+
+    return user.hasLensProfile;
   }
 
   public async getUserNonce(walletAddress: string): Promise<NonceDto> {

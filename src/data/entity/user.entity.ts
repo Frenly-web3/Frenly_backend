@@ -20,6 +20,9 @@ export class UserEntity {
   @Column({ name: 'on_creation_block_number' })
     onCreationBlockNumber: number;
 
+  @Column({ name: 'has_lens_profile', default: false })
+    hasLensProfile: Boolean;
+
   @CreateDateColumn({ name: 'creation_date' })
     creationDate: Date;
 

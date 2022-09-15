@@ -1,21 +1,19 @@
 /* eslint-disable no-continue */
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import moment from 'moment';
-import Web3 from 'web3';
-
-import { ApiConfigService } from '../infrastructure/config/api-config.service';
 
 import { UserRepository } from '../repository/user.repository';
 import { UserContentRepository } from '../repository/user-content.repository';
 import { ProcessedBlocksRepository } from '../repository/processed-blocks.repository';
 
-import { BaseNFTContractFactory } from './utils/base-nft-contract.factory';
+import { BlockchainConfigStorage } from './utils/blockchain-config.storage';
 
 import { ETHMethods } from '../infrastructure/config/const/eth-methods.const';
 import { Hex } from '../infrastructure/config/const/hex-const';
 import { ErrorMessages } from '../infrastructure/config/const/error-messages.const';
 
 import { ERCTokenEnum } from '../infrastructure/config/enums/erc-tokens.enum';
+import { BlockchainTypeEnum } from '../infrastructure/config/enums/blockchain-type.enum';
 
 import { IBlockHeader } from './interfaces/blocks/block-header.interface';
 import { IERCTransferData } from './interfaces/tokens/erc-transfer-data.interface';
@@ -29,29 +27,21 @@ import { SubscriptionServiceStatus } from '../dto/subscription-service/subscript
 
 @Injectable()
 export class BlockSubscriberService {
-  private readonly ETH_PROVIDER: string;
-
-  private readonly web3: Web3;
-
-  private readonly baseNFTContractFactory: BaseNFTContractFactory;
-
   private readonly logger: Logger;
+
+  private blockchainType: BlockchainTypeEnum;
 
   private isSubscribed = false;
 
-  private currentSubscription = null;
+  private subscriptions = [];
 
   constructor(
-    private readonly configService: ApiConfigService,
+    private readonly blockchainStorage: BlockchainConfigStorage,
 
     private readonly userRepository: UserRepository,
     private readonly userContentRepository: UserContentRepository,
     private readonly processedBlockRepository: ProcessedBlocksRepository,
   ) {
-    this.ETH_PROVIDER = configService.infuraWebSocketProvider;
-    this.web3 = new Web3(this.ETH_PROVIDER);
-    this.baseNFTContractFactory = new BaseNFTContractFactory(this.ETH_PROVIDER);
-
     this.logger = new Logger();
   }
 
@@ -66,11 +56,20 @@ export class BlockSubscriberService {
 
     this.isSubscribed = true;
 
-    const subscription = this.web3.eth.subscribe('newBlockHeaders')
-      .on('data', this.onBlockHeader.bind(this))
+    const ethConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.ETHEREUM);
+
+    const ethSubscription = ethConfig.web3.eth.subscribe('newBlockHeaders')
+      .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.ETHEREUM))
       .on('error', this.unsubscribe.bind(this));
 
-    this.currentSubscription = subscription;
+    const polygonConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.POLYGON_MAINNET);
+
+    const polygonSubscription = polygonConfig.web3.eth.subscribe('newBlockHeaders')
+      .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.POLYGON_MAINNET))
+      .on('error', this.unsubscribe.bind(this));
+
+    this.subscriptions.push(ethSubscription);
+    this.subscriptions.push(polygonSubscription);
   }
 
   public async unsubscribe(error: Error): Promise<void> {
@@ -86,22 +85,25 @@ export class BlockSubscriberService {
       this.logger.warn('Service was unsubscribed without error provided. It was possible user interactions');
     }
 
-    await this.currentSubscription.unsubscribe();
-    this.currentSubscription = null;
+    for (const subscription of this.subscriptions) {
+      await subscription.unsubscribe();
+    }
+
+    this.subscriptions = [];
   }
 
   // Main service logic
 
-  private async onBlockHeader(blockHeader: IBlockHeader): Promise<void> {
-    const transactions = await this.getTransactionsFromBlockHeader(blockHeader);
-    const transferLogs = await this.getERCTransferLogs(transactions);
-    const transfersData = await this.getERCTransfersData(transferLogs);
+  private async onBlockHeader(type: BlockchainTypeEnum, blockHeader: IBlockHeader): Promise<void> {
+    const transactions = await this.getTransactionsFromBlockHeader(blockHeader, type);
+    const transferLogs = await this.getERCTransferLogs(transactions, type);
+    const transfersData = await this.getERCTransfersData(transferLogs, type);
 
     await this.matchAndSaveUsersTransfers(blockHeader, transfersData);
 
-    await this.processedBlockRepository.create(blockHeader.number, blockHeader.timestamp);
+    await this.processedBlockRepository.create(blockHeader.number, type, blockHeader.timestamp);
 
-    this.logger.log(`Processed ${blockHeader.number} block completely`);
+    this.logger.log(`Processed ${blockHeader.number} block in ${BlockchainTypeEnum[type]} completely`);
   }
 
   private async matchAndSaveUsersTransfers(blockHeader: IBlockHeader, transfers: IERCTransferData[]): Promise<void> {
@@ -112,6 +114,7 @@ export class BlockSubscriberService {
 
       if (transactionMember != null) {
         const content: TokenTransferContentDto = {
+          blockchainType: data.blockchainType,
           transactionHash: data.transactionHash,
           fromAddress: data.fromAddress,
           toAddress: data.toAddress,
@@ -134,32 +137,38 @@ export class BlockSubscriberService {
         );
 
         this.logger.log(`
-          Found and added user (${transactionMember.walletAddress}) action at block: ${blockHeader.number}. Token id: ${data.tokenId}
+          Found and added user: (${transactionMember.walletAddress}),
+          Blockchain: ${BlockchainTypeEnum[data.type]},
+          Action at block: ${blockHeader.number},
+          Token id: ${data.tokenId}.
         `);
       }
     }
   }
 
-  private async getTransactionsFromBlockHeader(blockHeader: IBlockHeader): Promise<ITransactionReceipt[]> {
-    const block = await this.web3.eth.getBlock(blockHeader.hash);
+  private async getTransactionsFromBlockHeader(blockHeader: IBlockHeader, type: BlockchainTypeEnum): Promise<ITransactionReceipt[]> {
+    const { web3 } = this.blockchainStorage.getConfig(type);
+
+    const block = await web3.eth.getBlock(blockHeader.hash);
     const transactionReceipts: ITransactionReceipt[] = [];
 
     for (const transactionHash of block?.transactions ?? []) {
-      const receipt = await this.web3.eth.getTransactionReceipt(transactionHash);
+      const receipt = await web3.eth.getTransactionReceipt(transactionHash);
       transactionReceipts.push(receipt);
     }
 
     return transactionReceipts;
   }
 
-  private async getERCTransferLogs(transactions: ITransactionReceipt[]): Promise<ITransactionLog[]> {
+  private async getERCTransferLogs(transactions: ITransactionReceipt[], type: BlockchainTypeEnum): Promise<ITransactionLog[]> {
+    const { NFTContractFactory } = this.blockchainStorage.getConfig(type);
     const transferLogs: ITransactionLog[] = [];
 
     for (const transaction of transactions) {
       for (const log of transaction?.logs ?? []) {
         const methodTopic = log.topics[0];
 
-        const baseContract = this.baseNFTContractFactory.createBaseContract(log.address);
+        const baseContract = NFTContractFactory.createBaseContract(log.address);
 
         if (
           ETHMethods.TRANSFER_METHODS.includes(methodTopic)
@@ -173,19 +182,20 @@ export class BlockSubscriberService {
     return transferLogs;
   }
 
-  private async getERCTransfersData(logs: ITransactionLog[]): Promise<IERCTransferData[]> {
+  private async getERCTransfersData(logs: ITransactionLog[], type: BlockchainTypeEnum): Promise<IERCTransferData[]> {
+    const { NFTContractFactory } = this.blockchainStorage.getConfig(type);
     const ERCTransfers: IERCTransferData[] = [];
 
     for (const log of logs) {
-      const baseContract = this.baseNFTContractFactory.createBaseContract(log.address);
+      const baseContract = NFTContractFactory.createBaseContract(log.address);
 
       if (await baseContract.isERC721Contract()) {
-        const erc721TransferData = await this.transactionLogToERC721TransferData(log);
+        const erc721TransferData = await this.transactionLogToERC721TransferData(log, type);
         ERCTransfers.push(erc721TransferData);
       }
 
       if (await baseContract.isERC1155Contract()) {
-        const erc1155TransferData = await this.transactionLogToERC1155TransferData(log);
+        const erc1155TransferData = await this.transactionLogToERC1155TransferData(log, type);
         ERCTransfers.push(erc1155TransferData);
       }
     }
@@ -196,10 +206,10 @@ export class BlockSubscriberService {
   // On exception logic
   // // Fetch job
 
-  public async fetchMissedBlocks(): Promise<void> {
+  public async fetchMissedBlocks(type: BlockchainTypeEnum): Promise<void> {
     this.logger.log('Start fetching missing blocks');
 
-    const totalBlocks = await this.processedBlockRepository.getAll();
+    const totalBlocks = await this.processedBlockRepository.getAll(type);
 
     if (totalBlocks.length === 0 || totalBlocks.length === 1) {
       this.logger.log("System doesn't process any block yet. Stop fetching successfully");
@@ -215,9 +225,11 @@ export class BlockSubscriberService {
       return;
     }
 
+    const { web3 } = this.blockchainStorage.getConfig(type);
+
     for (const missedBlockNumber of missedBlockNumbers) {
-      const missedBlock = await this.web3.eth.getBlock(missedBlockNumber);
-      await this.onBlockHeader(missedBlock);
+      const missedBlock = await web3.eth.getBlock(missedBlockNumber);
+      await this.onBlockHeader(type, missedBlock);
     }
 
     this.logger.log(`Fetched ${missedBlockNumbers.length} missing blocks. Stop fetching successfully`);
@@ -244,10 +256,11 @@ export class BlockSubscriberService {
 
   // Mapping methods
 
-  private async transactionLogToERC721TransferData(transactionLog: ITransactionLog): Promise<IERCTransferData> {
-    const tokenId = this.web3.utils.hexToNumberString(transactionLog.topics[3]);
+  private async transactionLogToERC721TransferData(transactionLog: ITransactionLog, type: BlockchainTypeEnum): Promise<IERCTransferData> {
+    const { web3, NFTContractFactory } = this.blockchainStorage.getConfig(type);
+    const tokenId = web3.utils.hexToNumberString(transactionLog.topics[3]);
 
-    const baseContract = this.baseNFTContractFactory.createBaseContract(transactionLog.address);
+    const baseContract = NFTContractFactory.createBaseContract(transactionLog.address);
 
     return {
       transactionHash: transactionLog.transactionHash,
@@ -256,6 +269,7 @@ export class BlockSubscriberService {
       contractAddress: transactionLog.address,
       tokensAmount: 1,
       tokenId,
+      blockchainType: type,
       tokenURI: await baseContract.ERC721tokenURI(tokenId),
       tokenName: await baseContract.tokenName(),
       fromAddress: transactionLog.topics[1].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX),
@@ -263,17 +277,18 @@ export class BlockSubscriberService {
     };
   }
 
-  private async transactionLogToERC1155TransferData(transactionLog: ITransactionLog): Promise<IERCTransferData> {
-    const baseContract = this.baseNFTContractFactory.createBaseContract(transactionLog.address);
+  private async transactionLogToERC1155TransferData(transactionLog: ITransactionLog, type: BlockchainTypeEnum): Promise<IERCTransferData> {
+    const { web3, NFTContractFactory } = this.blockchainStorage.getConfig(type);
+    const baseContract = NFTContractFactory.createBaseContract(transactionLog.address);
 
     const { data } = transactionLog;
     const dataWithoutHexPrefix = data.replace(Hex.PREFIX, '');
 
     const tokensIdHex = dataWithoutHexPrefix.substring(0, ETHMethods.BYTES_PER_METHOD_DATA);
-    const tokenId = this.web3.utils.hexToNumberString(`${Hex.PREFIX}${tokensIdHex}`);
+    const tokenId = web3.utils.hexToNumberString(`${Hex.PREFIX}${tokensIdHex}`);
 
     const tokensAmountHex = dataWithoutHexPrefix.substring(ETHMethods.BYTES_PER_METHOD_DATA, dataWithoutHexPrefix.length);
-    const tokensAmount = this.web3.utils.hexToNumberString(`${Hex.PREFIX}${tokensAmountHex}`);
+    const tokensAmount = web3.utils.hexToNumberString(`${Hex.PREFIX}${tokensAmountHex}`);
 
     return {
       transactionHash: transactionLog.transactionHash,
@@ -282,6 +297,7 @@ export class BlockSubscriberService {
       contractAddress: transactionLog.address,
       tokensAmount,
       tokenId,
+      blockchainType: type,
       tokenURI: await baseContract.ERC1155tokenURI(tokenId),
       tokenName: '',
       fromAddress: transactionLog.topics[2].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX),

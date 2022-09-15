@@ -64,7 +64,23 @@ export class ApiConfigService {
 
   // Web3 Preferences
 
-  get infuraWebSocketProvider(): string {
-    return this.configService.get<string>('INFURA_WEB_SOCKET_PROVIDER');
+  get ethWebSocketProvider(): string {
+    return this.configService.get<string>('ETH_WEB_SOCKET_PROVIDER');
+  }
+
+  get polygonMainnetWebSocketProvider(): string {
+    return this.configService.get<string>('POLYGON_MAINNET_WEB_SOCKET_PROVIDER');
+  }
+
+  get polygonMainnetHttpInfuraProvider(): string {
+    return this.configService.get<string>('POLYGON_INFURA_MAINNET_HTTP_PROVIDER');
+  }
+
+  get polygonTestnetHttpInfuraProvider(): string {
+    return this.configService.get<string>('POLYGON_INFURA_TESTNET_HTTP_PROVIDER');
+  }
+
+  get lensContractAddress(): string {
+    return this.configService.get<string>('LENS_CONTRACT_ADDRESS');
   }
 }

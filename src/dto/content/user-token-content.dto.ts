@@ -1,17 +1,17 @@
+import { BlockchainTypeEnum } from '../../infrastructure/config/enums/blockchain-type.enum';
+
 export class UserTokenContentDto {
-  tokenId: string;
-
-  tokenType: string;
-
-  blockNumber: number;
-
-  transactionHash: string;
+  transferType: string;
 
   fromAddress: string;
 
   toAddress: string;
 
-  smartContractAddress: string;
+  tokenId: string;
 
-  metadataUri?: string;
+  blockchainType: BlockchainTypeEnum;
+
+  contractAddress: string;
+
+  tokenUri: string;
 }
