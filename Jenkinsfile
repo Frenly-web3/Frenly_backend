@@ -150,15 +150,20 @@ pipeline {
             }
           }
 
+          environment {
+            COMPOSE_PROJECT_NAME = 'socialfi'
+            ENV_FILE = '.development.env'
+          }
+
           steps {
             script {
               def IMAGE_EXPOSED_PORT = 3000
               def GIT_REPO_NAME = env.GIT_URL.replaceFirst(/^.*\/([^\/]+?).git$/, '$1').toLowerCase()
               sh """
-                echo REGISTRY_HOST=${REGISTRY_HOST} >> .development.env
-                echo GIT_REPO_NAME=${GIT_REPO_NAME} >> .development.env
-                echo BRANCH_NAME=${BRANCH_NAME} >> .development.env
-                docker-compose --env-file .development.env up -d
+                echo REGISTRY_HOST=${REGISTRY_HOST} >> ${ENV_FILE}
+                echo GIT_REPO_NAME=${GIT_REPO_NAME} >> ${ENV_FILE}
+                echo BRANCH_NAME=${BRANCH_NAME} >> ${ENV_FILE}
+                docker-compose --env-file ${ENV_FILE} up -d
               """
             }
             notify_slack("Traefik backend startup success")
