@@ -1,3 +1,4 @@
+import { BlockchainTypeEnum } from '../../../infrastructure/config/enums/blockchain-type.enum';
 import { ERCTokenEnum } from '../../../infrastructure/config/enums/erc-tokens.enum';
 
 export interface IERCTransferData {
@@ -16,6 +17,8 @@ export interface IERCTransferData {
   toAddress: string;
 
   contractAddress: string;
+
+  blockchainType: BlockchainTypeEnum;
 
   tokenURI?: string;
 

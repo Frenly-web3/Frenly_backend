@@ -98,6 +98,7 @@ export class ContentService {
 
         const tokenContentEntity = content.userContent;
 
+        tokenTransferContent.blockchainType = tokenContentEntity.blockchainType;
         tokenTransferContent.transferType = walletAddress === tokenContentEntity.fromAddress ? TransferTypes.SEND : TransferTypes.RECEIVE;
         tokenTransferContent.fromAddress = tokenContentEntity.fromAddress;
         tokenTransferContent.toAddress = tokenContentEntity.toAddress;

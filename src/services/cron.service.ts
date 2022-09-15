@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
+import { BlockchainTypeEnum } from '../infrastructure/config/enums/blockchain-type.enum';
+
 import { BlockSubscriberService } from './block-subscriber.service';
 
 @Injectable()
@@ -17,6 +19,7 @@ export class CronService {
       return;
     }
 
-    await this.blockSubscriberService.fetchMissedBlocks();
+    await this.blockSubscriberService.fetchMissedBlocks(BlockchainTypeEnum.ETHEREUM);
+    await this.blockSubscriberService.fetchMissedBlocks(BlockchainTypeEnum.POLYGON_MAINNET);
   }
 }

@@ -1,3 +1,5 @@
+import { BlockchainTypeEnum } from '../../infrastructure/config/enums/blockchain-type.enum';
+
 export class UserTokenContentDto {
   transferType: string;
 
@@ -6,6 +8,8 @@ export class UserTokenContentDto {
   toAddress: string;
 
   tokenId: string;
+
+  blockchainType: BlockchainTypeEnum;
 
   contractAddress: string;
 

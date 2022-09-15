@@ -1,5 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+import { BlockchainTypeEnum } from '../../infrastructure/config/enums/blockchain-type.enum';
 import { ERCTokenEnum } from '../../infrastructure/config/enums/erc-tokens.enum';
 import { TokenContentStatusEnum } from '../../infrastructure/config/enums/token-content-status.enum';
 
@@ -31,6 +32,9 @@ export class TokenTransfersContentEntity {
 
   @Column({ enum: TokenContentStatusEnum, default: TokenContentStatusEnum.UNPUBLISHED })
     status: TokenContentStatusEnum;
+
+  @Column({ name: 'blockchain_type', enum: BlockchainTypeEnum, default: BlockchainTypeEnum.ETHEREUM })
+    blockchainType: BlockchainTypeEnum;
 
   @Column({ name: 'block_number' })
     blockNumber: number;

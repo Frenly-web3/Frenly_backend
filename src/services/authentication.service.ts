@@ -33,7 +33,7 @@ export class AuthenticationService {
     private readonly userRepository: UserRepository,
     private readonly refreshTokenRepository: RefreshTokenRepository,
   ) {
-    this.web3 = new Web3(configService.infuraWebSocketProvider);
+    this.web3 = new Web3(configService.polygonTestnetHttpInfuraProvider);
     this.lensContract = new this.web3.eth.Contract(LensContractAbi as AbiItem[], this.configService.lensContractAddress);
   }
 

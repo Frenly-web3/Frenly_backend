@@ -22,6 +22,8 @@ import { ApiResponseInterceptor } from './infrastructure/middlewares/interceptor
 
 import { MapperProfile } from './infrastructure/mapper/profile.mapper';
 
+import { BlockchainConfigStorage } from './services/utils/blockchain-config.storage';
+
 import { BlockSubscriberService } from './services/block-subscriber.service';
 import { CronService } from './services/cron.service';
 import { ApiJWTService } from './services/jwt.service';
@@ -98,6 +100,8 @@ import { ContentController } from './controller/content.controller';
     JwtStrategy,
 
     MapperProfile,
+
+    BlockchainConfigStorage,
 
     TokenTransfersContentRepository,
     UserContentRepository,

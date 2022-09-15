@@ -18,7 +18,7 @@ export class UserRepository {
   public async getAll(searchString?: string, take?: number, skip?: number): Promise<UserEntity[]> {
     return this.repository.find({
       where: {
-        walletAddress: Like(`%${searchString}%`),
+        walletAddress: Like(`%${searchString ?? ''}%`),
       },
 
       take,
