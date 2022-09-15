@@ -11,6 +11,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start:dev": "cross-env NODE_ENV=development nest start --watch",
     "start:prod": "cross-env NODE_ENV=production node dist/main",
+    "start": "node dist/main",
     "migration:create:development": "cross-env NODE_ENV=development ts-node ./node_modules/typeorm/cli.js migration:create ./src/data/migrations/migrations --outputJs",
     "migration:generate:development": "cross-env NODE_ENV=development ts-node ./node_modules/typeorm/cli.js migration:generate ./src/data/migrations/migrations -d ./src/data/datasource.ts --pretty --outputJs",
     "migration:up:development": "cross-env NODE_ENV=development ts-node ./node_modules/.bin/typeorm migration:run -d ./src/data/datasource.ts",

@@ -1,0 +1,45 @@
+version: "3.8"
+x-logging: &logging
+  logging:
+    driver: loki
+    options:
+      loki-url: "http://localhost:3200/loki/api/v1/push"
+      loki-external-labels: "type=dev,repo=${COMPOSE_PROJECT_NAME},job=docker,container_name={{.Name}}"
+
+services:
+  backend:
+    <<: *logging
+    image: ${REGISTRY_HOST}/${GIT_REPO_NAME}.${BRANCH_NAME}
+    restart: unless-stopped
+    labels:
+      - "custom.label=${COMPOSE_PROJECT_NAME}"
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+    networks:
+      - default
+
+  pg_db:
+    <<: *logging
+    image: postgres:13
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      proxy:
+        aliases:
+          - ${COMPOSE_PROJECT_NAME}
+      default:
+
+volumes:
+  pgdata:
+
+networks:
+  default:
+    name: ${COMPOSE_PROJECT_NAME}
+  proxy:
+    external: true

@@ -1,0 +1,16 @@
+.circleci
+.github
+.git
+.vscode
+
+node_modules
+Jenkinsfile
+Dockerfile
+docker-compose.*
+
+dist
+build
+.next
+
+grafana
+*.Tests
