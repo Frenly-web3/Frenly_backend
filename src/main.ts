@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 
 import { use } from '@maticnetwork/maticjs';
 import { Web3ClientPlugin } from '@maticnetwork/maticjs-web3';
@@ -20,7 +20,7 @@ async function bootstrap() {
   const { port } = config;
 
   try {
-    const typeORMconnection = app.get(Connection);
+    const typeORMconnection = app.get(DataSource);
     await typeORMconnection.runMigrations();
   } catch (e) {
     process.exit(e);

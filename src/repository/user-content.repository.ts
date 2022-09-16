@@ -40,7 +40,7 @@ export class UserContentRepository {
       relations: ['owner'],
     });
 
-    content = await this.loadTokenTransfers(content);
+    content = await this.loadTokenTransfers(content, TokenContentStatusEnum.UNPUBLISHED);
 
     return content;
   }
@@ -54,7 +54,21 @@ export class UserContentRepository {
       relations: ['owner'],
     });
 
-    content = await this.loadTokenTransfers(content);
+    content = await this.loadTokenTransfers(content, TokenContentStatusEnum.UNPUBLISHED);
+
+    return content[0];
+  }
+
+  public async getPublishedContentById(id: number): Promise<UserContentEntity> {
+    let content = await this.repository.find({
+      where: {
+        id,
+      },
+
+      relations: ['owner'],
+    });
+
+    content = await this.loadTokenTransfers(content, TokenContentStatusEnum.PUBLISHED);
 
     return content[0];
   }
@@ -81,7 +95,7 @@ export class UserContentRepository {
     await this.repository.save(contentEntity);
   }
 
-  private async loadTokenTransfers(contents: UserContentEntity[]): Promise<UserContentEntity[]> {
+  private async loadTokenTransfers(contents: UserContentEntity[], status: TokenContentStatusEnum): Promise<UserContentEntity[]> {
     const result: UserContentEntity[] = [];
 
     const transferContentIds = contents
@@ -94,7 +108,7 @@ export class UserContentRepository {
       if (content.childEntityType === UserContentType.TOKEN_TRANSFER) {
         const transfer = tokenTransfers.find(
           (x) => x.id === content.childEntityId
-          && x.status === TokenContentStatusEnum.UNPUBLISHED
+          && x.status === status
           && !x.isRemoved,
         );
 
