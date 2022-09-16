@@ -62,6 +62,12 @@ export class ApiConfigService {
     return Number(this.configService.get<number>('REFRESH_TOKEN_EXPIRATION_TIME'));
   }
 
+  // IPFS Preferences
+
+  get nftStorageApiKey(): string {
+    return this.configService.get<string>('NFT_STORAGE_API_KEY');
+  }
+
   // Web3 Preferences
 
   get ethWebSocketProvider(): string {

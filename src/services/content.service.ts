@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { CurrentUserService } from './current-user.service';
+import { IPFSService } from './ipfs.service';
 
 import { UserRepository } from '../repository/user.repository';
 import { UserContentRepository } from '../repository/user-content.repository';
@@ -11,6 +12,7 @@ import { TransferTypes } from '../infrastructure/config/const/transfer-types.con
 
 import { UserContentType } from '../infrastructure/config/enums/user-content-type.enum';
 import { TokenContentStatusEnum } from '../infrastructure/config/enums/token-content-status.enum';
+import { BlockchainTypeEnum } from '../infrastructure/config/enums/blockchain-type.enum';
 
 import { UserContentEntity } from '../data/entity/user-content.entity';
 
@@ -21,6 +23,7 @@ import { UserTokenContentDto } from '../dto/content/user-token-content.dto';
 export class ContentService {
   constructor(
     private readonly currentUserService: CurrentUserService,
+    private readonly ipfsService: IPFSService,
 
     private readonly userRepository: UserRepository,
     private readonly contentRepository: UserContentRepository,
@@ -40,7 +43,7 @@ export class ContentService {
     return this.mapUserContent(walletAddress, content);
   }
 
-  public async publishContent(contentId: number): Promise<void> {
+  public async publishContent(contentId: number): Promise<string> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
     const currentUser = await this.userRepository.getOneByWalletAddress(walletAddress);
 
@@ -60,6 +63,16 @@ export class ContentService {
 
     content.userContent.status = TokenContentStatusEnum.PUBLISHED;
     await this.tokenTransferContentRepository.save(content.userContent);
+
+    const [mappedContent] = this.mapUserContent(walletAddress, [content]);
+    const link = await this.ipfsService.upload({
+      ...mappedContent.content,
+      id: content.id,
+      creationDate: content.creationDate,
+      blockchainType: BlockchainTypeEnum[mappedContent.content.blockchainType],
+    });
+
+    return link;
   }
 
   public async removeContent(contentId: number): Promise<void> {
