@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, IsNull, Not, Repository } from 'typeorm';
 
 import { TokenTransfersContentEntity } from '../data/entity/token-transfers-content.entity';
 
@@ -15,6 +15,21 @@ export class TokenTransfersContentRepository {
     private readonly connection: DataSource,
   ) {
     this.repository = connection.getRepository(TokenTransfersContentEntity);
+  }
+
+  public async getAllLensTransfers(take?: number, skip?: number): Promise<TokenTransfersContentEntity[]> {
+    return this.repository.find({
+      where: {
+        lensId: Not(IsNull()),
+      },
+
+      order: {
+        blockNumber: 'DESC',
+      },
+
+      take,
+      skip,
+    });
   }
 
   public async getWithIds(ids: number[]): Promise<TokenTransfersContentEntity[]> {

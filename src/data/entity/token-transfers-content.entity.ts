@@ -39,6 +39,9 @@ export class TokenTransfersContentEntity {
   @Column({ name: 'block_number' })
     blockNumber: number;
 
+  @Column({ name: 'lens_id', nullable: true })
+    lensId: string;
+
   @Column({ name: 'is_removed', default: false })
     isRemoved: Boolean;
 }

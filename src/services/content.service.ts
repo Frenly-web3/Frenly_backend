@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { CurrentUserService } from './current-user.service';
@@ -30,6 +31,11 @@ export class ContentService {
     private readonly tokenTransferContentRepository: TokenTransfersContentRepository,
   ) {}
 
+  public async getFeed(take: number, skip: number): Promise<string[]> {
+    const content = await this.tokenTransferContentRepository.getAllLensTransfers(take, skip);
+    return content.map((x) => x.lensId);
+  }
+
   public async getUnpublishedContent(): Promise<UserContentDto[]> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
     const currentUser = await this.userRepository.getOneByWalletAddress(walletAddress);
@@ -40,7 +46,7 @@ export class ContentService {
 
     const content = await this.contentRepository.getUnpublishedContent(currentUser.id);
 
-    return this.mapUserContent(walletAddress, content);
+    return this.mapUserContent(content);
   }
 
   public async publishContent(contentId: number): Promise<string> {
@@ -64,7 +70,7 @@ export class ContentService {
     content.userContent.status = TokenContentStatusEnum.PUBLISHED;
     await this.tokenTransferContentRepository.save(content.userContent);
 
-    const [mappedContent] = this.mapUserContent(walletAddress, [content]);
+    const [mappedContent] = this.mapUserContent([content]);
     const link = await this.ipfsService.upload({
       ...mappedContent.content,
       id: content.id,
@@ -73,6 +79,28 @@ export class ContentService {
     });
 
     return link;
+  }
+
+  public async bindContentWithLensId(contentId: number, lensId: string): Promise<void> {
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const currentUser = await this.userRepository.getOneByWalletAddress(walletAddress);
+
+    if (currentUser == null) {
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
+
+    if (!currentUser.hasLensProfile) {
+      throw new BadRequestException(ErrorMessages.NO_LENS_PROFILE);
+    }
+
+    const content = await this.contentRepository.getPublishedContentById(contentId);
+
+    if (content == null || content.owner.id !== currentUser.id) {
+      throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
+    }
+
+    content.userContent.lensId = lensId;
+    await this.tokenTransferContentRepository.save(content.userContent);
   }
 
   public async removeContent(contentId: number): Promise<void> {
@@ -95,10 +123,8 @@ export class ContentService {
 
   // Mapping methods
 
-  private mapUserContent(walletAddress: string, contents: UserContentEntity[]): UserContentDto[] {
+  private mapUserContent(contents: UserContentEntity[]): UserContentDto[] {
     const result: UserContentDto[] = [];
-
-    walletAddress = walletAddress.toLowerCase();
 
     for (const content of contents) {
       const contentWrapper = new UserContentDto();
@@ -112,7 +138,7 @@ export class ContentService {
         const tokenContentEntity = content.userContent;
 
         tokenTransferContent.blockchainType = tokenContentEntity.blockchainType;
-        tokenTransferContent.transferType = walletAddress === tokenContentEntity.fromAddress ? TransferTypes.SEND : TransferTypes.RECEIVE;
+        tokenTransferContent.transferType = content.owner.walletAddress === tokenContentEntity.fromAddress ? TransferTypes.SEND : TransferTypes.RECEIVE;
         tokenTransferContent.fromAddress = tokenContentEntity.fromAddress;
         tokenTransferContent.toAddress = tokenContentEntity.toAddress;
         tokenTransferContent.contractAddress = tokenContentEntity.smartContractAddress;
