@@ -30,6 +30,7 @@ import { ApiJWTService } from './services/jwt.service';
 import { AuthenticationService } from './services/authentication.service';
 import { CurrentUserService } from './services/current-user.service';
 import { ContentService } from './services/content.service';
+import { IPFSService } from './services/ipfs.service';
 
 import { TokenTransfersContentRepository } from './repository/token-transfer-content.repository';
 import { UserContentRepository } from './repository/user-content.repository';
@@ -96,6 +97,7 @@ import { ContentController } from './controller/content.controller';
     AuthenticationService,
     CurrentUserService,
     ContentService,
+    IPFSService,
 
     JwtStrategy,
 

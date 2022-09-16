@@ -20,7 +20,7 @@ export class ContentController {
 
   @Post('/:contentId')
   @UseGuards(AuthGuard())
-  public async publishContent(@Param() { contentId }: ContentIdDto): Promise<void> {
+  public async publishContent(@Param() { contentId }: ContentIdDto): Promise<string> {
     return this.contentService.publishContent(contentId);
   }
 
