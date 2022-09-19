@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { NFTStorage, Blob } from 'nft.storage';
 
+import { LensMetadata } from './interfaces/lens/lens-metadata.interface';
+
 import { ApiConfigService } from '../infrastructure/config/api-config.service';
 
 @Injectable()
@@ -15,7 +17,7 @@ export class IPFSService {
     this.client = new NFTStorage({ token: configService.nftStorageApiKey });
   }
 
-  public async upload(data: Object): Promise<string> {
+  public async upload(data: LensMetadata): Promise<string> {
     const buffer = Buffer.from(JSON.stringify(data));
     const blob = new Blob([buffer], { type: 'application/json' });
 
