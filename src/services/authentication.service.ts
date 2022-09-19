@@ -38,7 +38,7 @@ export class AuthenticationService {
   }
 
   public async hasLensProfile(walletAddress: string): Promise<Boolean> {
-    walletAddress.toLowerCase();
+    walletAddress = walletAddress.toLowerCase();
     const user = await this.userRepository.getOneByWalletAddress(walletAddress);
 
     if (user == null) {
