@@ -17,8 +17,15 @@ import { BlockchainTypeEnum } from '../infrastructure/config/enums/blockchain-ty
 
 import { UserContentEntity } from '../data/entity/user-content.entity';
 
+import { LensMetadata } from './interfaces/lens/lens-metadata.interface';
+
 import { UserContentDto } from '../dto/content/user-content.dto';
 import { UserTokenContentDto } from '../dto/content/user-token-content.dto';
+
+import { PublicationMetadataVersions } from '../infrastructure/config/enums/publication-metadata-version.enum';
+import { PublicationMainFocus } from '../infrastructure/config/enums/publication-main-focus.enum';
+import { PublicationMetadataAttribute } from '../infrastructure/config/enums/publication-metadata-attributes.enum';
+import { PublicationMetadataDisplayType } from '../infrastructure/config/enums/publication-metadata-display-type.enum';
 
 @Injectable()
 export class ContentService {
@@ -71,12 +78,9 @@ export class ContentService {
     await this.tokenTransferContentRepository.save(content.userContent);
 
     const [mappedContent] = this.mapUserContent([content]);
-    const link = await this.ipfsService.upload({
-      ...mappedContent.content,
-      id: content.id,
-      creationDate: content.creationDate,
-      blockchainType: BlockchainTypeEnum[mappedContent.content.blockchainType],
-    });
+    const metadata = this.mapContentToMetadata(mappedContent);
+
+    const link = await this.ipfsService.upload(metadata);
 
     return link;
   }
@@ -122,6 +126,69 @@ export class ContentService {
   }
 
   // Mapping methods
+
+  private mapContentToMetadata(data: UserContentDto): LensMetadata {
+    const attributes: PublicationMetadataAttribute[] = [];
+
+    attributes.push({
+      value: data.content.tokenUri,
+      traitType: 'Token URI',
+      displayType: PublicationMetadataDisplayType.string,
+    });
+
+    attributes.push({
+      value: data.content.contractAddress,
+      traitType: 'Contract address',
+      displayType: PublicationMetadataDisplayType.string,
+    });
+
+    attributes.push({
+      value: data.content.tokenId,
+      traitType: 'Token Id',
+      displayType: PublicationMetadataDisplayType.string,
+    });
+
+    attributes.push({
+      value: data.content.toAddress,
+      traitType: 'To address',
+      displayType: PublicationMetadataDisplayType.string,
+    });
+
+    attributes.push({
+      value: data.content.fromAddress,
+      traitType: 'From address',
+      displayType: PublicationMetadataDisplayType.string,
+    });
+
+    attributes.push({
+      value: data.content.transferType,
+      traitType: 'Transfer type',
+      displayType: PublicationMetadataDisplayType.string,
+    });
+
+    attributes.push({
+      value: `${data.creationDate}`,
+      traitType: 'Creation Date',
+      displayType: PublicationMetadataDisplayType.date,
+    });
+
+    attributes.push({
+      value: BlockchainTypeEnum[data.content.blockchainType],
+      traitType: 'Blockchain type',
+      displayType: PublicationMetadataDisplayType.string,
+    });
+
+    return {
+      version: PublicationMetadataVersions.two,
+      metadata_id: data.id.toString(),
+      description: 'SocialFi nft transfer post',
+      content: 'SocialFi nft transfer post',
+      locale: 'en-Us',
+      mainContentFocus: PublicationMainFocus.TEXT_ONLY,
+      name: `SocialFi Post ${data.id}`,
+      attributes: [],
+    };
+  }
 
   private mapUserContent(contents: UserContentEntity[]): UserContentDto[] {
     const result: UserContentDto[] = [];
