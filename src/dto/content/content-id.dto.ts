@@ -3,6 +3,6 @@ import { IsInt } from 'class-validator';
 
 export class ContentIdDto {
   @IsInt()
-  @Transform(() => Number)
+  @Transform(({ value }) => Number(value))
     contentId: number;
 }
