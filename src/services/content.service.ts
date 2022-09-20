@@ -178,6 +178,12 @@ export class ContentService {
       displayType: PublicationMetadataDisplayType.string,
     });
 
+    attributes.push({
+      value: data.content.transactionHash,
+      traitType: 'Transaction hash',
+      displayType: PublicationMetadataDisplayType.string,
+    });
+
     return {
       version: PublicationMetadataVersions.two,
       metadata_id: data.id.toString(),
@@ -186,7 +192,7 @@ export class ContentService {
       locale: 'en-Us',
       mainContentFocus: PublicationMainFocus.TEXT_ONLY,
       name: `SocialFi Post ${data.id}`,
-      attributes: [],
+      attributes,
     };
   }
 
@@ -211,6 +217,7 @@ export class ContentService {
         tokenTransferContent.contractAddress = tokenContentEntity.smartContractAddress;
         tokenTransferContent.tokenId = tokenContentEntity.tokenId;
         tokenTransferContent.tokenUri = tokenContentEntity.metadataUri;
+        tokenTransferContent.transactionHash = tokenContentEntity.transactionHash;
 
         contentWrapper.content = tokenTransferContent;
       }

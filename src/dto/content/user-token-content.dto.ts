@@ -14,4 +14,6 @@ export class UserTokenContentDto {
   contractAddress: string;
 
   tokenUri: string;
+
+  transactionHash: string;
 }
