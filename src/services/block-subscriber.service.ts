@@ -56,13 +56,20 @@ export class BlockSubscriberService {
 
     this.isSubscribed = true;
 
-    const polygonConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.POLYGON_MAINNET);
+    // const polygonConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.POLYGON_MAINNET);
 
-    const polygonSubscription = polygonConfig.web3.eth.subscribe('newBlockHeaders')
-      .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.POLYGON_MAINNET))
+    // const polygonSubscription = polygonConfig.web3.eth.subscribe('newBlockHeaders')
+    //   .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.POLYGON_MAINNET))
+    //   .on('error', this.unsubscribe.bind(this));
+
+    const ethConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.ETHEREUM);
+
+    const ethSubscription = ethConfig.web3.eth.subscribe('newBlockHeaders')
+      .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.ETHEREUM))
       .on('error', this.unsubscribe.bind(this));
 
-    this.subscriptions.push(polygonSubscription);
+    // this.subscriptions.push(polygonSubscription);
+    this.subscriptions.push(ethSubscription);
   }
 
   public async unsubscribe(error: Error): Promise<void> {
@@ -225,16 +232,11 @@ export class BlockSubscriberService {
     }
 
     const { web3 } = this.blockchainStorage.getConfig(type);
-    const tasks: Promise<void>[] = [];
 
     for (const missedBlockNumber of missedBlockNumbers) {
       const missedBlock = await web3.eth.getBlock(missedBlockNumber);
-      const task = this.onBlockHeader(type, missedBlock);
-
-      tasks.push(task);
+      await this.onBlockHeader(type, missedBlock);
     }
-
-    await Promise.all(tasks);
     this.logger.log(`Fetched ${missedBlockNumbers.length} missing blocks at ${BlockchainTypeEnum[type]}. Stop fetching successfully`);
   }
 
