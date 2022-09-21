@@ -19,7 +19,6 @@ export class CronService {
       return;
     }
 
-    await this.blockSubscriberService.fetchMissedBlocks(BlockchainTypeEnum.ETHEREUM);
     await this.blockSubscriberService.fetchMissedBlocks(BlockchainTypeEnum.POLYGON_MAINNET);
   }
 }

@@ -206,7 +206,7 @@ export class BlockSubscriberService {
   // // Fetch job
 
   public async fetchMissedBlocks(type: BlockchainTypeEnum): Promise<void> {
-    this.logger.log('Start fetching missing blocks');
+    this.logger.log(`Start fetching missing blocks at ${BlockchainTypeEnum[type]}`);
 
     const totalBlocks = await this.processedBlockRepository.getAll(type);
 
@@ -225,13 +225,17 @@ export class BlockSubscriberService {
     }
 
     const { web3 } = this.blockchainStorage.getConfig(type);
+    const tasks: Promise<void>[] = [];
 
     for (const missedBlockNumber of missedBlockNumbers) {
       const missedBlock = await web3.eth.getBlock(missedBlockNumber);
-      await this.onBlockHeader(type, missedBlock);
+      const task = this.onBlockHeader(type, missedBlock);
+
+      tasks.push(task);
     }
 
-    this.logger.log(`Fetched ${missedBlockNumbers.length} missing blocks. Stop fetching successfully`);
+    await Promise.all(tasks);
+    this.logger.log(`Fetched ${missedBlockNumbers.length} missing blocks at ${BlockchainTypeEnum[type]}. Stop fetching successfully`);
   }
 
   private async getMissedBlocksNumbers(totalBlocks: ProcessedBlocksEntity[]): Promise<number[]> {
