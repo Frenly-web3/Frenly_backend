@@ -88,15 +88,21 @@ export class BlockSubscriberService {
   // Main service logic
 
   private async onBlockHeader(type: BlockchainTypeEnum, blockHeader: IBlockHeader): Promise<void> {
-    const transactions = await this.getTransactionsFromBlockHeader(blockHeader, type);
-    const transferLogs = await this.getERCTransferLogs(transactions, type);
-    const transfersData = await this.getERCTransfersData(transferLogs, type);
+    try {
+      const transactions = await this.getTransactionsFromBlockHeader(blockHeader, type);
+      const transferLogs = await this.getERCTransferLogs(transactions, type);
+      const transfersData = await this.getERCTransfersData(transferLogs, type);
 
-    await this.matchAndSaveUsersTransfers(blockHeader, transfersData);
+      await this.matchAndSaveUsersTransfers(blockHeader, transfersData);
 
-    await this.processedBlockRepository.create(blockHeader.number, type, blockHeader.timestamp);
+      await this.processedBlockRepository.create(blockHeader.number, type, blockHeader.timestamp);
 
-    this.logger.log(`Processed ${blockHeader.number} block in ${BlockchainTypeEnum[type]} completely`);
+      this.logger.log(`Processed ${blockHeader.number} block in ${BlockchainTypeEnum[type]} completely`);
+    } catch (error) {
+      this.logger.error(`Error on block ${blockHeader.number}:`);
+
+      await this.unsubscribe(error);
+    }
   }
 
   private async matchAndSaveUsersTransfers(blockHeader: IBlockHeader, transfers: IERCTransferData[]): Promise<void> {
