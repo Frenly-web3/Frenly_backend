@@ -121,9 +121,9 @@ export class BlockSubscriberService {
     const users = await this.userRepository.getAll();
 
     for (const data of transfers) {
-      const transactionMember = users.find((x) => x.walletAddress === data.fromAddress || x.walletAddress === data.toAddress);
+      const transactionMembers = users.filter((x) => x.walletAddress === data.fromAddress || x.walletAddress === data.toAddress);
 
-      if (transactionMember != null) {
+      for (const member of transactionMembers) {
         let image = null;
 
         try {
@@ -153,7 +153,7 @@ export class BlockSubscriberService {
         const updateDate = moment.unix(Number(blockHeader.timestamp)).toDate();
 
         await this.userContentRepository.createTokenTransferContent(
-          transactionMember.id,
+          member.id,
           content,
 
           creationDate,
@@ -161,7 +161,7 @@ export class BlockSubscriberService {
         );
 
         this.logger.log(`
-          Found and added user: (${transactionMember.walletAddress}),
+          Found and added user: (${member.walletAddress}),
           Blockchain: ${BlockchainTypeEnum[data.type]},
           Action at block: ${blockHeader.number},
           Token id: ${data.tokenId}.
