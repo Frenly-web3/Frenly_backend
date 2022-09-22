@@ -4,12 +4,16 @@ import { DataSource } from 'typeorm';
 import { use } from '@maticnetwork/maticjs';
 import { Web3ClientPlugin } from '@maticnetwork/maticjs-web3';
 
+import fs from 'fs';
+
 import { BlockchainTypeEnum } from './infrastructure/config/enums/blockchain-type.enum';
 import { BlockchainConfigStorage } from './services/utils/blockchain-config.storage';
 
 import { AppModule } from './app.module';
 import { ApiConfigService } from './infrastructure/config/api-config.service';
 import { BlockSubscriberService } from './services/block-subscriber.service';
+
+import { FilePaths } from './infrastructure/config/const/files-paths.const';
 
 async function bootstrap() {
   await use(Web3ClientPlugin);
@@ -18,6 +22,11 @@ async function bootstrap() {
 
   const config: ApiConfigService = app.get(ApiConfigService);
   const { port } = config;
+
+  if (!fs.existsSync(FilePaths.TOKEN_IMAGES)) {
+    fs.mkdirSync('./public');
+    fs.mkdirSync('./public/token-images');
+  }
 
   try {
     const typeORMconnection = app.get(DataSource);
