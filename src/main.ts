@@ -13,8 +13,6 @@ import { AppModule } from './app.module';
 import { ApiConfigService } from './infrastructure/config/api-config.service';
 import { BlockSubscriberService } from './services/block-subscriber.service';
 
-import { FilePaths } from './infrastructure/config/const/files-paths.const';
-
 async function bootstrap() {
   await use(Web3ClientPlugin);
 
@@ -23,8 +21,11 @@ async function bootstrap() {
   const config: ApiConfigService = app.get(ApiConfigService);
   const { port } = config;
 
-  if (!fs.existsSync(FilePaths.TOKEN_IMAGES)) {
+  if (!fs.existsSync('./public')) {
     fs.mkdirSync('./public');
+  }
+
+  if (!fs.existsSync('./public/token-images')) {
     fs.mkdirSync('./public/token-images');
   }
 
