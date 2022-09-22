@@ -59,6 +59,7 @@ import { ContentController } from './controller/content.controller';
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', 'public'),
+      serveRoot: '/api',
     }),
     JwtModule.registerAsync({
       imports: [ApiConfigModule],
