@@ -21,6 +21,7 @@ import { LensMetadata } from './interfaces/lens/lens-metadata.interface';
 
 import { UserContentDto } from '../dto/content/user-content.dto';
 import { UserTokenContentDto } from '../dto/content/user-token-content.dto';
+import { FeedContentDto } from '../dto/content/feed-content.dto';
 
 import { PublicationMetadataVersions } from '../infrastructure/config/enums/publication-metadata-version.enum';
 import { PublicationMainFocus } from '../infrastructure/config/enums/publication-main-focus.enum';
@@ -38,9 +39,19 @@ export class ContentService {
     private readonly tokenTransferContentRepository: TokenTransfersContentRepository,
   ) {}
 
-  public async getFeed(take: number, skip: number): Promise<string[]> {
-    const content = await this.tokenTransferContentRepository.getAllLensTransfers(take, skip);
-    return content.map((x) => x.lensId);
+  public async getFeed(take: number, skip: number): Promise<FeedContentDto[]> {
+    const contents: UserContentEntity[] = [];
+
+    const transfers = await this.tokenTransferContentRepository.getAllLensTransfers(take, skip);
+
+    for (const transfer of transfers) {
+      const content = await this.contentRepository.getTokenTransferContentById(transfer.id);
+      content.userContent = transfer;
+
+      contents.push(content);
+    }
+
+    return this.mapUserContentToFeed(contents);
   }
 
   public async getUnpublishedContent(): Promise<UserContentDto[]> {
@@ -218,8 +229,37 @@ export class ContentService {
         tokenTransferContent.tokenId = tokenContentEntity.tokenId;
         tokenTransferContent.tokenUri = tokenContentEntity.metadataUri;
         tokenTransferContent.transactionHash = tokenContentEntity.transactionHash;
+        tokenTransferContent.image = tokenContentEntity.image;
 
         contentWrapper.content = tokenTransferContent;
+      }
+
+      result.push(contentWrapper);
+    }
+
+    return result;
+  }
+
+  private mapUserContentToFeed(contents: UserContentEntity[]): FeedContentDto[] {
+    const result: FeedContentDto[] = [];
+
+    for (const content of contents) {
+      const contentWrapper = new FeedContentDto();
+
+      contentWrapper.creationDate = content.creationDate;
+
+      if (content.childEntityType === UserContentType.TOKEN_TRANSFER) {
+        const tokenContentEntity = content.userContent;
+
+        contentWrapper.blockchainType = tokenContentEntity.blockchainType;
+        contentWrapper.fromAddress = tokenContentEntity.fromAddress;
+        contentWrapper.toAddress = tokenContentEntity.toAddress;
+        contentWrapper.contractAddress = tokenContentEntity.smartContractAddress;
+        contentWrapper.tokenId = tokenContentEntity.tokenId;
+        contentWrapper.tokenUri = tokenContentEntity.metadataUri;
+        contentWrapper.transactionHash = tokenContentEntity.transactionHash;
+        contentWrapper.image = tokenContentEntity.image;
+        contentWrapper.lensId = tokenContentEntity.lensId;
       }
 
       result.push(contentWrapper);

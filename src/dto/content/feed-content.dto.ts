@@ -1,8 +1,6 @@
 import { BlockchainTypeEnum } from '../../infrastructure/config/enums/blockchain-type.enum';
 
-export class UserTokenContentDto {
-  transferType: string;
-
+export class FeedContentDto {
   fromAddress: string;
 
   toAddress: string;
@@ -18,4 +16,8 @@ export class UserTokenContentDto {
   image: string;
 
   transactionHash: string;
+
+  lensId: string;
+
+  creationDate: Date;
 }

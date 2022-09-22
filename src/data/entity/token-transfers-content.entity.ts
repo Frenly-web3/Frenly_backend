@@ -27,6 +27,9 @@ export class TokenTransfersContentEntity {
   @Column({ name: 'metadata_URI', nullable: true })
     metadataUri: string;
 
+  @Column({ nullable: true })
+    image: string;
+
   @Column({ name: 'token_type', enum: ERCTokenEnum })
     tokenType: ERCTokenEnum;
 

@@ -1,6 +1,10 @@
 /* eslint-disable no-continue */
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+
 import moment from 'moment';
+import axios from 'axios';
+import fs from 'fs';
+import { v4 } from 'uuid';
 
 import { UserRepository } from '../repository/user.repository';
 import { UserContentRepository } from '../repository/user-content.repository';
@@ -11,6 +15,7 @@ import { BlockchainConfigStorage } from './utils/blockchain-config.storage';
 import { ETHMethods } from '../infrastructure/config/const/eth-methods.const';
 import { Hex } from '../infrastructure/config/const/hex-const';
 import { ErrorMessages } from '../infrastructure/config/const/error-messages.const';
+import { FilePaths } from '../infrastructure/config/const/files-paths.const';
 
 import { ERCTokenEnum } from '../infrastructure/config/enums/erc-tokens.enum';
 import { BlockchainTypeEnum } from '../infrastructure/config/enums/blockchain-type.enum';
@@ -106,7 +111,7 @@ export class BlockSubscriberService {
 
       this.logger.log(`Processed ${blockHeader.number} block in ${BlockchainTypeEnum[type]} completely`);
     } catch (error) {
-      this.logger.error(`Error on block ${blockHeader.number}:`);
+      this.logger.error(error);
 
       await this.unsubscribe(error);
     }
@@ -119,6 +124,18 @@ export class BlockSubscriberService {
       const transactionMember = users.find((x) => x.walletAddress === data.fromAddress || x.walletAddress === data.toAddress);
 
       if (transactionMember != null) {
+        let image = null;
+
+        try {
+          if (data.imageURI != null) {
+            image = `${data.tokenId}-${v4()}-${new Date().toISOString()}.png`;
+
+            await this.downloadFile(data.imageURI, `${FilePaths.TOKEN_IMAGES}/${image}`);
+          }
+        } catch (e) {
+          image = null;
+        }
+
         const content: TokenTransferContentDto = {
           blockchainType: data.blockchainType,
           transactionHash: data.transactionHash,
@@ -129,6 +146,7 @@ export class BlockSubscriberService {
           tokenType: data.type,
           metadataUri: data.tokenURI,
           blockNumber: blockHeader.number,
+          image,
         };
 
         const creationDate = moment.unix(Number(blockHeader.timestamp)).toDate();
@@ -266,6 +284,7 @@ export class BlockSubscriberService {
     const tokenId = web3.utils.hexToNumberString(transactionLog.topics[3]);
 
     const baseContract = NFTContractFactory.createBaseContract(transactionLog.address);
+    const tokenURI = await baseContract.ERC721tokenURI(tokenId);
 
     return {
       transactionHash: transactionLog.transactionHash,
@@ -275,10 +294,11 @@ export class BlockSubscriberService {
       tokensAmount: 1,
       tokenId,
       blockchainType: type,
-      tokenURI: await baseContract.ERC721tokenURI(tokenId),
+      tokenURI,
       tokenName: await baseContract.tokenName(),
       fromAddress: transactionLog.topics[1].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX),
       toAddress: transactionLog.topics[2].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX),
+      imageURI: await this.getTokenImageURI(tokenURI),
     };
   }
 
@@ -295,6 +315,8 @@ export class BlockSubscriberService {
     const tokensAmountHex = dataWithoutHexPrefix.substring(ETHMethods.BYTES_PER_METHOD_DATA, dataWithoutHexPrefix.length);
     const tokensAmount = web3.utils.hexToNumberString(`${Hex.PREFIX}${tokensAmountHex}`);
 
+    const tokenURI = await baseContract.ERC1155tokenURI(tokenId);
+
     return {
       transactionHash: transactionLog.transactionHash,
       logIndex: transactionLog.logIndex,
@@ -303,10 +325,46 @@ export class BlockSubscriberService {
       tokensAmount,
       tokenId,
       blockchainType: type,
-      tokenURI: await baseContract.ERC1155tokenURI(tokenId),
+      tokenURI,
       tokenName: '',
       fromAddress: transactionLog.topics[2].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX),
       toAddress: transactionLog.topics[3].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX),
+      imageURI: await this.getTokenImageURI(tokenURI),
     };
+  }
+
+  private async getTokenImageURI(tokenURI: string): Promise<string> {
+    try {
+      const { data } = await axios.get(tokenURI);
+
+      if (data?.image != null) {
+        return data?.image;
+      }
+
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  private async downloadFile(fileUrl: string, outputLocationPath: string): Promise<void> {
+    const writer = fs.createWriteStream(outputLocationPath);
+
+    const { data } = await axios.get(fileUrl, {
+      responseType: 'stream',
+      maxBodyLength: 1000000000000000,
+      maxContentLength: 1000000000000000,
+      timeout: 20000,
+    });
+
+    data.pipe(writer);
+
+    return new Promise((resolve, reject) => {
+      writer.on('finish', () => {
+        writer.close();
+        resolve(null);
+      });
+      writer.on('error', reject);
+    });
   }
 }

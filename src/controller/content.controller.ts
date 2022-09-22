@@ -7,6 +7,7 @@ import { UserContentDto } from '../dto/content/user-content.dto';
 import { ContentIdDto } from '../dto/content/content-id.dto';
 import { ContentWithLensIdsDto } from '../dto/content/content-with-lens-ids.dto';
 import { PagingData } from '../dto/paging-data.dto';
+import { FeedContentDto } from '../dto/content/feed-content.dto';
 
 @Controller('content')
 export class ContentController {
@@ -15,7 +16,7 @@ export class ContentController {
   ) {}
 
   @Get()
-  public async getFeed(@Query() { take, skip }: PagingData): Promise<string[]> {
+  public async getFeed(@Query() { take, skip }: PagingData): Promise<FeedContentDto[]> {
     return this.contentService.getFeed(take, skip);
   }
 

@@ -18,5 +18,7 @@ export class TokenTransferContentDto {
 
   metadataUri: string;
 
+  image: string;
+
   blockNumber: number;
 }

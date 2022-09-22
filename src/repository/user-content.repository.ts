@@ -25,6 +25,14 @@ export class UserContentRepository {
     this.repository = connection.getRepository(UserContentEntity);
   }
 
+  public async getTokenTransferContentById(tokenTransferId: number): Promise<UserContentEntity> {
+    return this.repository.findOne({
+      where: {
+        childEntityId: tokenTransferId,
+      },
+    });
+  }
+
   public async getUnpublishedContent(userId: number): Promise<UserContentEntity[]> {
     let content = await this.repository.find({
       where: {

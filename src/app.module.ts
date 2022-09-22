@@ -8,6 +8,9 @@ import { ScheduleModule } from '@nestjs/schedule';
 
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { ServeStaticModule } from '@nestjs/serve-static';
+
+import { join } from 'path';
 import * as httpContext from 'express-http-context';
 
 import { JwtModule } from '@nestjs/jwt';
@@ -53,6 +56,9 @@ import { ContentController } from './controller/content.controller';
       imports: [ApiConfigModule],
       useFactory: (configService: ApiConfigService) => configService.postgresConfig,
       inject: [ApiConfigService],
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '..', 'public'),
     }),
     JwtModule.registerAsync({
       imports: [ApiConfigModule],

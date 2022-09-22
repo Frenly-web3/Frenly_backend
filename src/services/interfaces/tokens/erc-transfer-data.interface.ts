@@ -23,4 +23,6 @@ export interface IERCTransferData {
   tokenURI?: string;
 
   tokenName?: string;
+
+  imageURI?: string;
 }
