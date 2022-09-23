@@ -13,7 +13,10 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/rest`)"
+      - "traefik.http.routers.backend.middlewares=rest-strip-prefix@docker,api-add-prefix@docker"
+      - "traefik.http.middlewares.rest-strip-prefix.stripprefix.prefixes=/rest"
+      - "traefik.http.middlewares.api-add-prefix.addprefix.prefix=/api"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=le"
       - "traefik.http.routers.backend.tls=true"
