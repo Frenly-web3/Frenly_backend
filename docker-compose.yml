@@ -19,6 +19,7 @@ services:
       - "traefik.http.middlewares.rest-strip-prefix.stripprefix.prefixes=/rest"
       - "traefik.http.middlewares.api-add-prefix.addprefix.prefix=/api"
       - "traefik.http.routers.backend.entrypoints=web"
+      - "io.portainer.accesscontrol.teams=devs,managers"
     networks:
       - default
 
@@ -30,6 +31,8 @@ services:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
+    labels:
+      - "io.portainer.accesscontrol.teams=devs,managers"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
