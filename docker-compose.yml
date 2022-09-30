@@ -22,6 +22,7 @@ services:
       - "io.portainer.accesscontrol.teams=devs,managers"
     networks:
       - default
+      - portainer
 
   pg_db:
     <<: *logging
@@ -48,4 +49,6 @@ networks:
   default:
     name: ${COMPOSE_PROJECT_NAME}
   proxy:
+    external: true
+  portainer:
     external: true
