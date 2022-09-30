@@ -28,7 +28,7 @@ export class BaseNFTContract {
       const name = await this.contract.methods.name().call();
       return name;
     } catch (e) {
-      return this.contract?.options?.address ?? '';
+      return '';
     }
   }
 

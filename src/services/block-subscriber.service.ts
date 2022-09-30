@@ -63,6 +63,9 @@ export class BlockSubscriberService {
 
     const polygonConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.POLYGON_MAINNET);
 
+    // const blockHeader = await polygonConfig.web3.eth.getBlock(33743517);
+    // this.onBlockHeader(BlockchainTypeEnum.POLYGON_MAINNET, blockHeader);
+
     const polygonSubscription = polygonConfig.web3.eth.subscribe('newBlockHeaders')
       .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.POLYGON_MAINNET))
       .on('error', this.unsubscribe.bind(this));
@@ -211,7 +214,7 @@ export class BlockSubscriberService {
     const ERCTransfers: IERCTransferData[] = [];
 
     for (const log of logs) {
-      const baseContract = NFTContractFactory.createBaseContract(log.address);
+      const baseContract = NFTContractFactory.createBaseContract(log.address.toLowerCase());
 
       if (await baseContract.isERC721Contract()) {
         const erc721TransferData = await this.transactionLogToERC721TransferData(log, type);
@@ -290,14 +293,14 @@ export class BlockSubscriberService {
       transactionHash: transactionLog.transactionHash,
       logIndex: transactionLog.logIndex,
       type: ERCTokenEnum.ERC_721,
-      contractAddress: transactionLog.address,
+      contractAddress: transactionLog.address.toLowerCase(),
       tokensAmount: 1,
       tokenId,
       blockchainType: type,
       tokenURI,
       tokenName: await baseContract.tokenName(),
-      fromAddress: transactionLog.topics[1].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX),
-      toAddress: transactionLog.topics[2].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX),
+      fromAddress: transactionLog.topics[1].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX).toLowerCase(),
+      toAddress: transactionLog.topics[2].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX).toLowerCase(),
       imageURI: await this.getTokenImageURI(tokenURI),
     };
   }
@@ -321,14 +324,14 @@ export class BlockSubscriberService {
       transactionHash: transactionLog.transactionHash,
       logIndex: transactionLog.logIndex,
       type: ERCTokenEnum.ERC_1155,
-      contractAddress: transactionLog.address,
+      contractAddress: transactionLog.address.toLowerCase(),
       tokensAmount,
       tokenId,
       blockchainType: type,
       tokenURI,
       tokenName: '',
-      fromAddress: transactionLog.topics[2].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX),
-      toAddress: transactionLog.topics[3].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX),
+      fromAddress: transactionLog.topics[2].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX).toLowerCase(),
+      toAddress: transactionLog.topics[3].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX).toLowerCase(),
       imageURI: await this.getTokenImageURI(tokenURI),
     };
   }
