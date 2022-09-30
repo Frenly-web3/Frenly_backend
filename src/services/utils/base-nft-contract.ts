@@ -51,9 +51,13 @@ export class BaseNFTContract {
   }
 
   public async isContractAddress(walletAddress: string): Promise<boolean> {
-    const addressCode = await this.web3.eth.getCode(walletAddress);
+    try {
+      const addressCode = await this.web3.eth.getCode(walletAddress);
 
-    return addressCode !== '0x';
+      return addressCode !== '0x';
+    } catch (e) {
+      return false;
+    }
   }
 
   public async isERC721Contract(): Promise<boolean> {
