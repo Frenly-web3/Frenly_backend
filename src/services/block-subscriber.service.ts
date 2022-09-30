@@ -124,7 +124,10 @@ export class BlockSubscriberService {
     const users = await this.userRepository.getAll();
 
     for (const data of transfers) {
-      const transactionMembers = users.filter((x) => x.walletAddress === data.fromAddress || x.walletAddress === data.toAddress);
+      const transactionMembers = users.filter(
+        (x) => x.walletAddress.toLowerCase() === data.fromAddress.toLowerCase()
+        || x.walletAddress.toLowerCase() === data.toAddress.toLowerCase(),
+      );
 
       for (const member of transactionMembers) {
         let image = null;
