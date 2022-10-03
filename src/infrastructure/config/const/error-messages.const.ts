@@ -18,4 +18,6 @@ export class ErrorMessages {
   public static readonly PROVIDER_ALREADY_EXISTS = 'This provider already exists';
 
   public static readonly PROVIDER_NOT_EXISTS = 'This provider not exists';
+
+  public static readonly OWN_POST_REPOST = 'Cant repost own post';
 }

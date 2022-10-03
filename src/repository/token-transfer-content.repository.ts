@@ -32,6 +32,10 @@ export class TokenTransfersContentRepository {
     });
   }
 
+  public async getByLensId(lensId: string): Promise<TokenTransfersContentEntity> {
+    return this.repository.findOne({ where: { lensId } });
+  }
+
   public async getWithIds(ids: number[]): Promise<TokenTransfersContentEntity[]> {
     return this.repository.find({ where: { id: In(ids) } });
   }

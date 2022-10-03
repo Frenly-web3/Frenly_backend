@@ -19,5 +19,7 @@ export class FeedContentDto {
 
   lensId: string;
 
+  isMirror: boolean;
+
   creationDate: Date;
 }

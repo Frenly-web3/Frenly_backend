@@ -30,6 +30,8 @@ export class UserContentRepository {
       where: {
         childEntityId: tokenTransferId,
       },
+
+      relations: ['owner'],
     });
   }
 
@@ -87,20 +89,23 @@ export class UserContentRepository {
 
     creationDate: Date = new Date(),
     updateDate: Date = new Date(),
-  ) {
+  ): Promise<UserContentEntity> {
     const user = await this.userRepository.getOneById(userId);
-    const { id } = await this.tokenTransferRepository.create(contentData);
+    const transferContent = await this.tokenTransferRepository.create(contentData);
 
     const contentEntity = this.repository.create({
       owner: user,
-      childEntityId: id,
+      childEntityId: transferContent.id,
       childEntityType: UserContentType.TOKEN_TRANSFER,
 
       creationDate,
       updateDate,
     });
 
+    contentEntity.userContent = transferContent;
     await this.repository.save(contentEntity);
+
+    return contentEntity;
   }
 
   private async loadTokenTransfers(contents: UserContentEntity[], status: TokenContentStatusEnum): Promise<UserContentEntity[]> {
