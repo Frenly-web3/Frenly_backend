@@ -8,6 +8,7 @@ import { ContentIdDto } from '../dto/content/content-id.dto';
 import { ContentWithLensIdsDto } from '../dto/content/content-with-lens-ids.dto';
 import { PagingData } from '../dto/paging-data.dto';
 import { FeedContentDto } from '../dto/content/feed-content.dto';
+import { LensMirrorDto } from '../dto/content/lens-mirror.dto';
 
 @Controller('content')
 export class ContentController {
@@ -30,6 +31,12 @@ export class ContentController {
   @UseGuards(AuthGuard())
   public async publishContent(@Param() { contentId }: ContentIdDto): Promise<string> {
     return this.contentService.publishContent(contentId);
+  }
+
+  @Post('/:lensId/repost/:newLensId')
+  @UseGuards(AuthGuard())
+  public async repostContent(@Param() { lensId, newLensId }: LensMirrorDto): Promise<void> {
+    return this.contentService.repostContent(lensId, newLensId);
   }
 
   @Put('/:contentId/:lensId')

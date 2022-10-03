@@ -22,6 +22,7 @@ import { LensMetadata } from './interfaces/lens/lens-metadata.interface';
 import { UserContentDto } from '../dto/content/user-content.dto';
 import { UserTokenContentDto } from '../dto/content/user-token-content.dto';
 import { FeedContentDto } from '../dto/content/feed-content.dto';
+import { TokenTransferContentDto } from '../dto/token-transfers/token-transfer-content.dto';
 
 import { PublicationMetadataVersions } from '../infrastructure/config/enums/publication-metadata-version.enum';
 import { PublicationMainFocus } from '../infrastructure/config/enums/publication-main-focus.enum';
@@ -116,6 +117,51 @@ export class ContentService {
 
     content.userContent.lensId = lensId;
     await this.tokenTransferContentRepository.save(content.userContent);
+  }
+
+  public async repostContent(existsLensId: string, newLensId: string): Promise<void> {
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const { id } = await this.userRepository.getOneByWalletAddress(walletAddress);
+
+    const transfer = await this.tokenTransferContentRepository.getByLensId(existsLensId);
+
+    if (transfer == null) {
+      throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
+    }
+
+    const { creationDate, updateDate, owner } = await this.contentRepository.getTokenTransferContentById(transfer.id);
+
+    if (owner.id === id) {
+      throw new BadRequestException(ErrorMessages.OWN_POST_REPOST);
+    }
+
+    const content: TokenTransferContentDto = {
+      transactionHash: transfer.transactionHash,
+
+      fromAddress: transfer.fromAddress,
+
+      toAddress: transfer.toAddress,
+
+      smartContractAddress: transfer.smartContractAddress,
+
+      tokenId: transfer.tokenId,
+
+      tokenType: transfer.tokenType,
+
+      blockchainType: transfer.blockchainType,
+
+      metadataUri: transfer.metadataUri,
+
+      image: transfer.image,
+
+      blockNumber: transfer.blockNumber,
+    };
+
+    const { userContent } = await this.contentRepository.createTokenTransferContent(id, content, creationDate, updateDate);
+
+    userContent.isMirror = true;
+    userContent.lensId = newLensId;
+    await this.tokenTransferContentRepository.save(userContent);
   }
 
   public async removeContent(contentId: number): Promise<void> {
@@ -260,6 +306,7 @@ export class ContentService {
         contentWrapper.transactionHash = tokenContentEntity.transactionHash;
         contentWrapper.image = tokenContentEntity.image;
         contentWrapper.lensId = tokenContentEntity.lensId;
+        contentWrapper.isMirror = tokenContentEntity.isMirror;
       }
 
       result.push(contentWrapper);
