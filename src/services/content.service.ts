@@ -129,7 +129,7 @@ export class ContentService {
       throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
     }
 
-    const { creationDate, updateDate, owner } = await this.contentRepository.getTokenTransferContentById(transfer.id);
+    const { owner } = await this.contentRepository.getTokenTransferContentById(transfer.id);
 
     if (owner.id === id) {
       throw new BadRequestException(ErrorMessages.OWN_POST_REPOST);
@@ -157,10 +157,12 @@ export class ContentService {
       blockNumber: transfer.blockNumber,
     };
 
-    const { userContent } = await this.contentRepository.createTokenTransferContent(id, content, creationDate, updateDate);
+    const { userContent } = await this.contentRepository.createTokenTransferContent(id, content);
 
     userContent.isMirror = true;
     userContent.lensId = newLensId;
+    userContent.status = TokenContentStatusEnum.PUBLISHED;
+
     await this.tokenTransferContentRepository.save(userContent);
   }
 
