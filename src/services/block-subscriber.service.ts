@@ -63,11 +63,14 @@ export class BlockSubscriberService {
 
     const polygonConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.POLYGON_MAINNET);
 
-    const polygonSubscription = polygonConfig.web3.eth.subscribe('newBlockHeaders')
-      .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.POLYGON_MAINNET))
-      .on('error', this.unsubscribe.bind(this));
+    const block = await polygonConfig.web3.eth.getBlock(33911522);
+    await this.onBlockHeader(BlockchainTypeEnum.POLYGON_MAINNET, block);
 
-    this.subscriptions.push(polygonSubscription);
+    // const polygonSubscription = polygonConfig.web3.eth.subscribe('newBlockHeaders')
+    //   .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.POLYGON_MAINNET))
+    //   .on('error', this.unsubscribe.bind(this));
+
+    // this.subscriptions.push(polygonSubscription);
   }
 
   public async unsubscribe(error: Error): Promise<void> {
@@ -210,7 +213,7 @@ export class BlockSubscriberService {
 
       const intersection = users.filter((e) => topicAddresses.includes(e.walletAddress));
 
-      if (intersection.length !== 0) {
+      if (intersection.length !== 0 && await baseContract.isContractAddress(log.address.toLowerCase())) {
         if (await baseContract.isERC721Contract()) {
           const erc721TransferData = await this.transactionLogToERC721TransferData(log, type);
           ERCTransfers.push(erc721TransferData);

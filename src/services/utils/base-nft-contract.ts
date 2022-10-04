@@ -29,7 +29,12 @@ export class BaseNFTContract {
       const name = await this.contract.methods.name().call();
       return name;
     } catch (e) {
+      this.logger.warn('GET_TOKEN_NAME');
       this.logger.warn(e);
+
+      if (e?.message === 'connection not open on send()') {
+        return await this.tokenName();
+      }
 
       return '';
     }
@@ -40,7 +45,12 @@ export class BaseNFTContract {
       const uri = await this.contract.methods.tokenURI(tokenId).call();
       return uri;
     } catch (e) {
+      this.logger.warn('GET_ERC721_URI');
       this.logger.warn(e);
+
+      if (e?.message === 'connection not open on send()') {
+        return await this.ERC721tokenURI(tokenId);
+      }
 
       return '';
     }
@@ -51,7 +61,12 @@ export class BaseNFTContract {
       const uri = await this.contract.methods.URI(tokenId).call();
       return uri;
     } catch (e) {
+      this.logger.warn('GET_ERC1155_URI');
       this.logger.warn(e);
+
+      if (e?.message === 'connection not open on send()') {
+        return await this.ERC1155tokenURI(tokenId);
+      }
 
       return '';
     }
@@ -63,7 +78,12 @@ export class BaseNFTContract {
 
       return addressCode !== '0x';
     } catch (e) {
+      this.logger.warn('IS_SC_ADDRESS');
       this.logger.warn(e);
+
+      if (e?.message === 'connection not open on send()') {
+        return await this.isContractAddress(walletAddress);
+      }
 
       return false;
     }
@@ -74,7 +94,12 @@ export class BaseNFTContract {
       const isERC721 = await this.contract.methods.supportsInterface(this.ERC721_INTERFACE_ID).call();
       return isERC721;
     } catch (e) {
+      this.logger.warn('IS_ERC721_SC');
       this.logger.warn(e);
+
+      if (e?.message === 'connection not open on send()') {
+        return await this.isERC721Contract();
+      }
 
       return false;
     }
@@ -85,7 +110,12 @@ export class BaseNFTContract {
       const isERC1155 = await this.contract.methods.supportsInterface(this.ERC1155_INTERFACE_ID).call();
       return isERC1155;
     } catch (e) {
+      this.logger.warn('IS_ERC1155_SC');
       this.logger.warn(e);
+
+      if (e?.message === 'connection not open on send()') {
+        return await this.isERC1155Contract();
+      }
 
       return false;
     }
