@@ -63,21 +63,11 @@ export class BlockSubscriberService {
 
     const polygonConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.POLYGON_MAINNET);
 
-    // const blockHeader = await polygonConfig.web3.eth.getBlock(33743517);
-    // this.onBlockHeader(BlockchainTypeEnum.POLYGON_MAINNET, blockHeader);
-
     const polygonSubscription = polygonConfig.web3.eth.subscribe('newBlockHeaders')
       .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.POLYGON_MAINNET))
       .on('error', this.unsubscribe.bind(this));
 
-    // const ethConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.ETHEREUM);
-
-    // const ethSubscription = ethConfig.web3.eth.subscribe('newBlockHeaders')
-    //   .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.ETHEREUM))
-    //   .on('error', this.unsubscribe.bind(this));
-
     this.subscriptions.push(polygonSubscription);
-    // this.subscriptions.push(ethSubscription);
   }
 
   public async unsubscribe(error: Error): Promise<void> {
@@ -105,14 +95,14 @@ export class BlockSubscriberService {
   private async onBlockHeader(type: BlockchainTypeEnum, blockHeader: IBlockHeader): Promise<void> {
     try {
       const transactions = await this.getTransactionsFromBlockHeader(blockHeader, type);
-      const transferLogs = await this.getERCTransferLogs(transactions, type);
+      const transferLogs = await this.getERCTransferLogs(transactions);
       const transfersData = await this.getERCTransfersData(transferLogs, type);
 
       await this.matchAndSaveUsersTransfers(blockHeader, transfersData);
 
       await this.processedBlockRepository.create(blockHeader.number, type, blockHeader.timestamp);
 
-      this.logger.log(`Processed ${blockHeader.number} block in ${BlockchainTypeEnum[type]} completely`);
+      this.logger.log(`Processed ${blockHeader.number} block in ${BlockchainTypeEnum[type]} completely.`);
     } catch (error) {
       this.logger.error(error);
 
@@ -180,29 +170,25 @@ export class BlockSubscriberService {
     const { web3 } = this.blockchainStorage.getConfig(type);
 
     const block = await web3.eth.getBlock(blockHeader.hash);
-    const transactionReceipts: ITransactionReceipt[] = [];
+    const transactionReceipts: Promise<ITransactionReceipt>[] = [];
 
     for (const transactionHash of block?.transactions ?? []) {
-      const receipt = await web3.eth.getTransactionReceipt(transactionHash);
+      const receipt = web3.eth.getTransactionReceipt(transactionHash);
       transactionReceipts.push(receipt);
     }
 
-    return transactionReceipts;
+    return Promise.all(transactionReceipts);
   }
 
-  private async getERCTransferLogs(transactions: ITransactionReceipt[], type: BlockchainTypeEnum): Promise<ITransactionLog[]> {
-    const { NFTContractFactory } = this.blockchainStorage.getConfig(type);
+  private async getERCTransferLogs(transactions: ITransactionReceipt[]): Promise<ITransactionLog[]> {
     const transferLogs: ITransactionLog[] = [];
 
     for (const transaction of transactions) {
       for (const log of transaction?.logs ?? []) {
         const methodTopic = log.topics[0];
 
-        const baseContract = NFTContractFactory.createBaseContract(log.address);
-
         if (
           ETHMethods.TRANSFER_METHODS.includes(methodTopic)
-          && baseContract.isContractAddress(log.address)
         ) {
           transferLogs.push(log);
         }
@@ -219,14 +205,21 @@ export class BlockSubscriberService {
     for (const log of logs) {
       const baseContract = NFTContractFactory.createBaseContract(log.address.toLowerCase());
 
-      if (await baseContract.isERC721Contract()) {
-        const erc721TransferData = await this.transactionLogToERC721TransferData(log, type);
-        ERCTransfers.push(erc721TransferData);
-      }
+      const users = await this.userRepository.getAll();
+      const topicAddresses = log.topics.map((e) => this.topicToWalletAddress(e));
 
-      if (await baseContract.isERC1155Contract()) {
-        const erc1155TransferData = await this.transactionLogToERC1155TransferData(log, type);
-        ERCTransfers.push(erc1155TransferData);
+      const intersection = users.filter((e) => topicAddresses.includes(e.walletAddress));
+
+      if (intersection.length !== 0) {
+        if (await baseContract.isERC721Contract()) {
+          const erc721TransferData = await this.transactionLogToERC721TransferData(log, type);
+          ERCTransfers.push(erc721TransferData);
+        }
+
+        if (await baseContract.isERC1155Contract()) {
+          const erc1155TransferData = await this.transactionLogToERC1155TransferData(log, type);
+          ERCTransfers.push(erc1155TransferData);
+        }
       }
     }
 
@@ -337,6 +330,10 @@ export class BlockSubscriberService {
       toAddress: transactionLog.topics[3].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX).toLowerCase(),
       imageURI: await this.getTokenImageURI(tokenURI),
     };
+  }
+
+  private topicToWalletAddress(topic: string): string {
+    return topic.replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX).toLowerCase();
   }
 
   private async getTokenImageURI(tokenURI: string): Promise<string> {

@@ -1,5 +1,6 @@
 import { Contract } from 'web3-eth-contract';
 import { AbiItem } from 'web3-utils';
+import { Logger } from '@nestjs/common';
 import Web3 from 'web3';
 
 import BaseContractAbi from '../../../base-contract-abi.json';
@@ -13,7 +14,7 @@ export class BaseNFTContract {
 
   private contract: Contract;
 
-  private isLocked: boolean = false;
+  private logger = new Logger();
 
   constructor(
     private readonly provider: string,
@@ -28,6 +29,8 @@ export class BaseNFTContract {
       const name = await this.contract.methods.name().call();
       return name;
     } catch (e) {
+      this.logger.warn(e);
+
       return '';
     }
   }
@@ -37,6 +40,8 @@ export class BaseNFTContract {
       const uri = await this.contract.methods.tokenURI(tokenId).call();
       return uri;
     } catch (e) {
+      this.logger.warn(e);
+
       return '';
     }
   }
@@ -46,6 +51,8 @@ export class BaseNFTContract {
       const uri = await this.contract.methods.URI(tokenId).call();
       return uri;
     } catch (e) {
+      this.logger.warn(e);
+
       return '';
     }
   }
@@ -56,6 +63,8 @@ export class BaseNFTContract {
 
       return addressCode !== '0x';
     } catch (e) {
+      this.logger.warn(e);
+
       return false;
     }
   }
@@ -65,6 +74,8 @@ export class BaseNFTContract {
       const isERC721 = await this.contract.methods.supportsInterface(this.ERC721_INTERFACE_ID).call();
       return isERC721;
     } catch (e) {
+      this.logger.warn(e);
+
       return false;
     }
   }
@@ -74,6 +85,8 @@ export class BaseNFTContract {
       const isERC1155 = await this.contract.methods.supportsInterface(this.ERC1155_INTERFACE_ID).call();
       return isERC1155;
     } catch (e) {
+      this.logger.warn(e);
+
       return false;
     }
   }
