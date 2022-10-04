@@ -34,30 +34,6 @@ export class UserRepository {
     return this.repository.findOne({ where: { walletAddress } });
   }
 
-  public async getTopContentOwners(amount: number = 10): Promise<[UserEntity, number]> {
-    const content = await this.repository
-      .createQueryBuilder('users')
-      .leftJoin('users.contents', 'contents')
-      .addSelect('COUNT(contents.id) as userContentsCount')
-      .groupBy('users.id')
-      .orderBy('userContentsCount', 'DESC')
-      .limit(amount)
-      .execute();
-
-    return content.map((x) => {
-      const user = new UserEntity();
-
-      user.id = x.users_id;
-      user.nonce = x.users_nonce;
-      user.walletAddress = x.users_wallet_address;
-      user.onCreationBlockNumber = x.users_on_creation_block_number;
-      user.creationDate = x.users_creation_date;
-      user.updateDate = x.users_update_date;
-
-      return [user, Number(x.usercontentscount)];
-    });
-  }
-
   public async create(data: UserDto): Promise<UserEntity> {
     const user = this.repository.create(data);
     await this.repository.save(user);

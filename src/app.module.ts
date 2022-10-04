@@ -32,18 +32,17 @@ import { CronService } from './services/cron.service';
 import { ApiJWTService } from './services/jwt.service';
 import { AuthenticationService } from './services/authentication.service';
 import { CurrentUserService } from './services/current-user.service';
-import { ContentService } from './services/content.service';
 import { IPFSService } from './services/ipfs.service';
 
-import { TokenTransfersContentRepository } from './repository/token-transfer-content.repository';
-import { UserContentRepository } from './repository/user-content.repository';
 import { UserRepository } from './repository/user.repository';
 import { ProcessedBlocksRepository } from './repository/processed-blocks.repository';
 import { RefreshTokenRepository } from './repository/refresh-token.repository';
+import { PostRepository } from './repository/post.repository';
+import { NftTokenPostRepository } from './repository/nft-token-post.repository';
+import { NftMetadataRepository } from './repository/nft-metadata.repository';
 
 import { BlockSubscriberController } from './controller/block-subscriber.controller';
 import { AuthenticationController } from './controller/authentication.controller';
-import { ContentController } from './controller/content.controller';
 
 @Module({
   imports: [
@@ -78,7 +77,6 @@ import { ContentController } from './controller/content.controller';
   controllers: [
     BlockSubscriberController,
     AuthenticationController,
-    ContentController,
   ],
   providers: [
     {
@@ -103,7 +101,6 @@ import { ContentController } from './controller/content.controller';
     ApiJWTService,
     AuthenticationService,
     CurrentUserService,
-    ContentService,
     IPFSService,
 
     JwtStrategy,
@@ -112,11 +109,12 @@ import { ContentController } from './controller/content.controller';
 
     BlockchainConfigStorage,
 
-    TokenTransfersContentRepository,
-    UserContentRepository,
     UserRepository,
     ProcessedBlocksRepository,
     RefreshTokenRepository,
+    PostRepository,
+    NftTokenPostRepository,
+    NftMetadataRepository,
   ],
 })
 export class AppModule implements NestModule {

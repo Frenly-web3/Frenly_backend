@@ -1,8 +1,10 @@
 import { AutoMap } from '@automapper/classes';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
+import { CommentEntity } from './comment.entity';
+import { LikeEntity } from './like.entity';
+import { PostEntity } from './post.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
-import { UserContentEntity } from './user-content.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -17,11 +19,8 @@ export class UserEntity {
   @AutoMap()
     walletAddress: string;
 
-  @Column({ name: 'on_creation_block_number' })
-    onCreationBlockNumber: number;
-
-  @Column({ name: 'has_lens_profile', default: false })
-    hasLensProfile: Boolean;
+  @Column({ name: 'is_registered', default: false })
+    isRegistered: boolean;
 
   @CreateDateColumn({ name: 'creation_date' })
     creationDate: Date;
@@ -34,6 +33,12 @@ export class UserEntity {
   @OneToMany(() => RefreshTokenEntity, (token) => token.user)
     refreshTokens: RefreshTokenEntity[];
 
-  @OneToMany(() => UserContentEntity, (content) => content.owner)
-    contents: UserContentEntity[];
+  @OneToMany(() => PostEntity, (post) => post.owner)
+    posts: PostEntity[];
+
+  @OneToMany(() => CommentEntity, (comments) => comments.owner)
+    comments: CommentEntity[];
+
+  @OneToMany(() => LikeEntity, (likes) => likes.owner)
+    likes: LikeEntity[];
 }

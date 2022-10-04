@@ -2,11 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
+import { CommentEntity } from '../../data/entity/comment.entity';
+import { LikeEntity } from '../../data/entity/like.entity';
+import { NftMetadataEntity } from '../../data/entity/nft-metadata.entity';
+import { NftTokenPostEntity } from '../../data/entity/nft-token-post.entity';
+import { PostEntity } from '../../data/entity/post.entity';
 import { ProcessedBlocksEntity } from '../../data/entity/processed-blocks.entity';
 import { RefreshTokenEntity } from '../../data/entity/refresh-token.entity';
 import { SubscriptionEntity } from '../../data/entity/subscription.entity';
-import { TokenTransfersContentEntity } from '../../data/entity/token-transfers-content.entity';
-import { UserContentEntity } from '../../data/entity/user-content.entity';
 import { UserEntity } from '../../data/entity/user.entity';
 
 @Injectable()
@@ -32,12 +35,15 @@ export class ApiConfigService {
       password: this.configService.get<string>('DB_PASSWORD'),
       database: this.configService.get<string>('DB_NAME'),
       entities: [
-        ProcessedBlocksEntity,
+        CommentEntity,
+        LikeEntity,
+        NftMetadataEntity,
+        NftTokenPostEntity,
+        PostEntity,
         RefreshTokenEntity,
         SubscriptionEntity,
-        TokenTransfersContentEntity,
-        UserContentEntity,
         UserEntity,
+        ProcessedBlocksEntity,
       ],
       keepConnectionAlive: true,
       synchronize: false,
@@ -74,19 +80,7 @@ export class ApiConfigService {
     return this.configService.get<string>('ETH_WEB_SOCKET_PROVIDER');
   }
 
-  get polygonMainnetWebSocketProvider(): string {
-    return this.configService.get<string>('POLYGON_MAINNET_WEB_SOCKET_PROVIDER');
-  }
-
-  get polygonMainnetHttpInfuraProvider(): string {
-    return this.configService.get<string>('POLYGON_INFURA_MAINNET_HTTP_PROVIDER');
-  }
-
-  get polygonTestnetHttpInfuraProvider(): string {
-    return this.configService.get<string>('POLYGON_INFURA_TESTNET_HTTP_PROVIDER');
-  }
-
-  get lensContractAddress(): string {
-    return this.configService.get<string>('LENS_CONTRACT_ADDRESS');
+  get polygonWebSocketProvider(): string {
+    return this.configService.get<string>('POLYGON_WEB_SOCKET_PROVIDER');
   }
 }

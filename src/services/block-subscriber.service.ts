@@ -7,8 +7,8 @@ import fs from 'fs';
 import { v4 } from 'uuid';
 
 import { UserRepository } from '../repository/user.repository';
-import { UserContentRepository } from '../repository/user-content.repository';
 import { ProcessedBlocksRepository } from '../repository/processed-blocks.repository';
+import { PostRepository } from '../repository/post.repository';
 
 import { BlockchainConfigStorage } from './utils/blockchain-config.storage';
 
@@ -19,6 +19,7 @@ import { FilePaths } from '../infrastructure/config/const/files-paths.const';
 
 import { ERCTokenEnum } from '../infrastructure/config/enums/erc-tokens.enum';
 import { BlockchainTypeEnum } from '../infrastructure/config/enums/blockchain-type.enum';
+import { PostStatusEnum } from '../infrastructure/config/enums/post-status.enum';
 
 import { IBlockHeader } from './interfaces/blocks/block-header.interface';
 import { IERCTransferData } from './interfaces/tokens/erc-transfer-data.interface';
@@ -27,8 +28,8 @@ import { ITransactionReceipt } from './interfaces/transactions/transaction-recei
 
 import { ProcessedBlocksEntity } from '../data/entity/processed-blocks.entity';
 
-import { TokenTransferContentDto } from '../dto/token-transfers/token-transfer-content.dto';
 import { SubscriptionServiceStatus } from '../dto/subscription-service/subscription-service-status.dto';
+import { NftPostDto } from '../dto/nft-posts/nft-post.dto';
 
 @Injectable()
 export class BlockSubscriberService {
@@ -44,7 +45,8 @@ export class BlockSubscriberService {
     private readonly blockchainStorage: BlockchainConfigStorage,
 
     private readonly userRepository: UserRepository,
-    private readonly userContentRepository: UserContentRepository,
+    private readonly postRepository: PostRepository,
+
     private readonly processedBlockRepository: ProcessedBlocksRepository,
   ) {
     this.logger = new Logger();
@@ -132,7 +134,7 @@ export class BlockSubscriberService {
           image = null;
         }
 
-        const content: TokenTransferContentDto = {
+        const content: NftPostDto = {
           blockchainType: data.blockchainType,
           transactionHash: data.transactionHash,
           fromAddress: data.fromAddress,
@@ -148,9 +150,13 @@ export class BlockSubscriberService {
         const creationDate = moment.unix(Number(blockHeader.timestamp)).toDate();
         const updateDate = moment.unix(Number(blockHeader.timestamp)).toDate();
 
-        await this.userContentRepository.createTokenTransferContent(
+        const postStatus = member.isRegistered ? PostStatusEnum.PENDING : PostStatusEnum.SYSTEM_PUBLISHED;
+
+        await this.postRepository.createNftTokenPost(
           member.id,
           content,
+
+          postStatus,
 
           creationDate,
           updateDate,
@@ -158,7 +164,7 @@ export class BlockSubscriberService {
 
         this.logger.log(`
           Found and added user: (${member.walletAddress}),
-          Blockchain: ${BlockchainTypeEnum[data.type]},
+          Blockchain: ${BlockchainTypeEnum[data.blockchainType]},
           Action at block: ${blockHeader.number},
           Token id: ${data.tokenId}.
         `);
@@ -331,6 +337,8 @@ export class BlockSubscriberService {
       imageURI: await this.getTokenImageURI(tokenURI),
     };
   }
+
+  // Additional Helpers
 
   private topicToWalletAddress(topic: string): string {
     return topic.replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX).toLowerCase();

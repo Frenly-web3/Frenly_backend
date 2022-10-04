@@ -16,13 +16,6 @@ export class AuthenticationController {
     private readonly authenticationService: AuthenticationService,
   ) {}
 
-  @Get('/:walletAddress/lens-profile')
-  public async hasLensProfile(@Param() params: WalletAddressDto): Promise<Boolean> {
-    const { walletAddress } = params;
-
-    return this.authenticationService.hasLensProfile(walletAddress);
-  }
-
   @Get('/:walletAddress/nonce')
   public async getUserNonce(@Param() params: WalletAddressDto): Promise<NonceDto> {
     const { walletAddress } = params;

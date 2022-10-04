@@ -10,7 +10,6 @@ export class BlockChainConfig {
 
   constructor(
     private readonly provider: string,
-    private readonly smartContractProvider: string,
     readonly blockchainType: BlockchainTypeEnum,
   ) {
     const wsOptions = {
@@ -21,6 +20,6 @@ export class BlockChainConfig {
     };
 
     this.web3 = new Web3(new Web3.providers.WebsocketProvider(provider, wsOptions));
-    this.NFTContractFactory = new BaseNFTContractFactory(smartContractProvider);
+    this.NFTContractFactory = new BaseNFTContractFactory(provider);
   }
 }

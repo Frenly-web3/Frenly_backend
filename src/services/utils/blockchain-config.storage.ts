@@ -24,24 +24,21 @@ export class BlockchainConfigStorage {
     }
 
     let provider = '';
-    let smartContractProvider = '';
 
     switch (type) {
       case BlockchainTypeEnum.ETHEREUM:
         provider = this.configService.ethWebSocketProvider;
-        smartContractProvider = this.configService.ethWebSocketProvider;
         break;
 
       case BlockchainTypeEnum.POLYGON_MAINNET:
-        provider = this.configService.polygonMainnetWebSocketProvider;
-        smartContractProvider = this.configService.polygonMainnetHttpInfuraProvider;
+        provider = this.configService.polygonWebSocketProvider;
         break;
 
       default:
         throw new BadRequestException(ErrorMessages.INVALID_PROVIDER);
     }
 
-    const config = new BlockChainConfig(provider, smartContractProvider, type);
+    const config = new BlockChainConfig(provider, type);
     this.blockchainConfigs.push(config);
   }
 
