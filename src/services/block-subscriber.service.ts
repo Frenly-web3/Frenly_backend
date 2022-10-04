@@ -63,14 +63,11 @@ export class BlockSubscriberService {
 
     const polygonConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.POLYGON_MAINNET);
 
-    const block = await polygonConfig.web3.eth.getBlock(33911522);
-    await this.onBlockHeader(BlockchainTypeEnum.POLYGON_MAINNET, block);
+    const polygonSubscription = polygonConfig.web3.eth.subscribe('newBlockHeaders')
+      .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.POLYGON_MAINNET))
+      .on('error', this.unsubscribe.bind(this));
 
-    // const polygonSubscription = polygonConfig.web3.eth.subscribe('newBlockHeaders')
-    //   .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.POLYGON_MAINNET))
-    //   .on('error', this.unsubscribe.bind(this));
-
-    // this.subscriptions.push(polygonSubscription);
+    this.subscriptions.push(polygonSubscription);
   }
 
   public async unsubscribe(error: Error): Promise<void> {
