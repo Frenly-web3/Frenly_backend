@@ -20,7 +20,14 @@ export class BaseNFTContract {
     private readonly provider: string,
     private readonly address: string,
   ) {
-    this.web3 = new Web3(provider);
+    const wsOptions = {
+      clientConfig: {
+        maxReceivedFrameSize: 100000000,
+        maxReceivedMessageSize: 100000000,
+      },
+    };
+
+    this.web3 = new Web3(new Web3.providers.WebsocketProvider(provider, wsOptions));
     this.contract = new this.web3.eth.Contract(BaseContractAbi as AbiItem[], address);
   }
 
