@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { AuthenticationService } from './authentication.service';
 
@@ -21,6 +21,12 @@ export class AdminService {
   ) {}
 
   public async addUser(walletAddress: string): Promise<void> {
+    const existingUser = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
+
+    if (existingUser != null) {
+      throw new BadRequestException();
+    }
+
     const user = await this.userRepository.create({
       nonce: this.authService.generateNonce(),
       walletAddress: walletAddress.toLowerCase(),
