@@ -65,6 +65,7 @@ services:
 volumes:
   pgdata:
   pgadmin:
+  public:
 
 networks:
   default:

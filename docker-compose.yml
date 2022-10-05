@@ -47,6 +47,9 @@ volumes:
   pgdata:
     labels:
       - "io.portainer.accesscontrol.teams=devs,managers"
+  public:
+    labels:
+      - "io.portainer.accesscontrol.teams=devs,managers"
 
 networks:
   default:
