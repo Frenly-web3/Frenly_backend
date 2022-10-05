@@ -166,7 +166,7 @@ pipeline {
                 docker-compose --env-file ${ENV_FILE} up -d
               """
             }
-            notify_slack("Traefik backend startup success")
+            notify_slack("Traefik backend startup success", "/rest")
           }
         }
       }
