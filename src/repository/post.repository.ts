@@ -32,16 +32,10 @@ export class PostRepository {
 
   public async getTotalFeedByUserId(id: number, take?: number, skip?: number): Promise<PostEntity[]> {
     return this.repository.find({
-      where: [
-        {
-          owner: { id: Not(id) },
-          status: PostStatusEnum.PUBLISHED,
-        },
-        {
-          owner: { id: Not(id) },
-          status: PostStatusEnum.SYSTEM_PUBLISHED,
-        },
-      ],
+      where: {
+        owner: { id: Not(id) },
+        status: PostStatusEnum.PUBLISHED,
+      },
 
       order: {
         createdAt: 'DESC',
@@ -56,16 +50,10 @@ export class PostRepository {
 
   public async getOwnedFeedByUserId(id: number, take?: number, skip?: number): Promise<PostEntity[]> {
     return this.repository.find({
-      where: [
-        {
-          owner: { id },
-          status: PostStatusEnum.PUBLISHED,
-        },
-        {
-          owner: { id },
-          status: PostStatusEnum.PUBLISHED,
-        },
-      ],
+      where: {
+        owner: { id },
+        status: PostStatusEnum.PUBLISHED,
+      },
 
       order: {
         createdAt: 'DESC',
@@ -85,6 +73,38 @@ export class PostRepository {
     return this.repository.find({
       where: {
         owner: { id: In(respondentsIds) },
+        status: PostStatusEnum.PUBLISHED,
+      },
+
+      order: {
+        createdAt: 'DESC',
+      },
+
+      take,
+      skip,
+
+      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+    });
+  }
+
+  // Drafts
+
+  public async getDraftById(id: number): Promise<PostEntity> {
+    return this.repository.findOne({
+      where: {
+        id,
+        status: PostStatusEnum.PENDING,
+      },
+
+      relations: ['owner'],
+    });
+  }
+
+  public async getDraftsByUserId(id: number, take?: number, skip?: number): Promise<PostEntity[]> {
+    return this.repository.find({
+      where: {
+        owner: { id },
+        status: PostStatusEnum.PENDING,
       },
 
       order: {
@@ -118,6 +138,10 @@ export class PostRepository {
       nftPost,
     });
 
+    return this.repository.save(entity);
+  }
+
+  public async save(entity: PostEntity): Promise<PostEntity> {
     return this.repository.save(entity);
   }
 }

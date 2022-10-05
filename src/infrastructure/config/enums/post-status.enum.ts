@@ -4,6 +4,4 @@ export enum PostStatusEnum {
   UNPUBLISHED,
 
   PENDING,
-
-  SYSTEM_PUBLISHED,
 }
