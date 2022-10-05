@@ -1,31 +1,52 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { FeedService } from '../services/feed.service';
 
-import { WalletAddressDto } from '../dto/user/wallet-address.dto';
 import { PagingData } from '../dto/paging-data.dto';
+import { NftPostLookupDto } from '../dto/nft-posts/nft-post-lookup.dto';
+import { ContentIdDto } from '../dto/nft-posts/content-id.dto';
+import { LensMirrorDto } from '../dto/nft-posts/lens-mirror.dto';
+import { ContentWithLensIdsDto } from '../dto/nft-posts/content-with-lens-id.dto';
 
-@Controller('feed')
+@Controller('content')
 export class FeedController {
   constructor(
     private readonly feedService: FeedService,
   ) {}
 
-  @Get('/user/:walletAddress')
-  public async getPostsByWalletAddress(@Param() { walletAddress }: WalletAddressDto, @Query() { take, skip }: PagingData) {
-    return this.feedService.getPostsByWalletAddress(walletAddress, take, skip);
+  @Get()
+  public async getFeed(@Query() { take, skip }: PagingData): Promise<NftPostLookupDto[]> {
+    return this.feedService.getFeed(take, skip);
   }
 
-  @Get('/total')
+  @Get('unpublished')
   @UseGuards(AuthGuard())
-  public async getTotalFeed(@Query() { take, skip }: PagingData) {
-    return this.feedService.getTotalFeed(take, skip);
+  public async getUnpublished(): Promise<NftPostLookupDto[]> {
+    return this.feedService.getUnpublishedContent();
   }
 
-  @Get('/respondents')
+  @Post('/:contentId')
   @UseGuards(AuthGuard())
-  public async getRespondentsFeed(@Query() { take, skip }: PagingData) {
-    return this.feedService.getRespondentsFeed(take, skip);
+  public async publishContent(@Param() { contentId }: ContentIdDto): Promise<string> {
+    return this.feedService.publishContent(contentId);
+  }
+
+  @Post('/:lensId/repost/:newLensId')
+  @UseGuards(AuthGuard())
+  public async repostContent(@Param() { lensId, newLensId }: LensMirrorDto): Promise<void> {
+    return this.feedService.repostContent(lensId, newLensId);
+  }
+
+  @Put('/:contentId/:lensId')
+  @UseGuards(AuthGuard())
+  public async bindContentWithLens(@Param() { contentId, lensId }: ContentWithLensIdsDto): Promise<void> {
+    return this.feedService.bindContentWithLensId(contentId, lensId);
+  }
+
+  @Delete('/:contentId')
+  @UseGuards(AuthGuard())
+  public async removeContent(@Param() { contentId }: ContentIdDto): Promise<void> {
+    return this.feedService.removeContent(contentId);
   }
 }

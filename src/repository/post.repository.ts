@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, In, Not, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 import { UserRepository } from './user.repository';
 import { NftTokenPostRepository } from './nft-token-post.repository';
-import { SubscriptionRepository } from './subscription.repository';
 
 import { PostEntity } from '../data/entity/post.entity';
 
 import { PostStatusEnum } from '../infrastructure/config/enums/post-status.enum';
 
 import { NftPostDto } from '../dto/nft-posts/nft-post.dto';
+import { UserRole } from '../infrastructure/config/enums/users-role.enum';
 
 @Injectable()
 export class PostRepository {
@@ -21,7 +21,6 @@ export class PostRepository {
     private readonly connection: DataSource,
 
     private readonly userRepository: UserRepository,
-    private readonly subscriptionRepository: SubscriptionRepository,
 
     private readonly nftTokenPostRepository: NftTokenPostRepository,
   ) {
@@ -30,10 +29,37 @@ export class PostRepository {
 
   // Feed
 
-  public async getTotalFeedByUserId(id: number, take?: number, skip?: number): Promise<PostEntity[]> {
+  public async getByLensId(id: string): Promise<PostEntity> {
+    return this.repository.findOne({
+      where: {
+        nftPost: { lensId: id },
+      },
+
+      order: {
+        createdAt: 'DESC',
+      },
+
+      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+    });
+  }
+
+  public async getPostById(id: number): Promise<PostEntity> {
+    return this.repository.findOne({
+      where: {
+        id,
+      },
+
+      order: {
+        createdAt: 'DESC',
+      },
+
+      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+    });
+  }
+
+  public async getTotalFeedByUserId(take?: number, skip?: number): Promise<PostEntity[]> {
     return this.repository.find({
       where: {
-        owner: { id: Not(id) },
         status: PostStatusEnum.PUBLISHED,
       },
 
@@ -66,27 +92,6 @@ export class PostRepository {
     });
   }
 
-  public async getRespondentsFeedByUserId(id: number, take?: number, skip?: number): Promise<PostEntity[]> {
-    const respondents = await this.subscriptionRepository.getUserRespondentsById(id);
-    const respondentsIds = respondents.map((e) => e.id);
-
-    return this.repository.find({
-      where: {
-        owner: { id: In(respondentsIds) },
-        status: PostStatusEnum.PUBLISHED,
-      },
-
-      order: {
-        createdAt: 'DESC',
-      },
-
-      take,
-      skip,
-
-      relations: ['owner', 'nftPost', 'nftPost.metadata'],
-    });
-  }
-
   // Drafts
 
   public async getDraftById(id: number): Promise<PostEntity> {
@@ -104,6 +109,28 @@ export class PostRepository {
     return this.repository.find({
       where: {
         owner: { id },
+        status: PostStatusEnum.PENDING,
+      },
+
+      order: {
+        createdAt: 'DESC',
+      },
+
+      take,
+      skip,
+
+      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+    });
+  }
+
+  // ADMIN
+
+  public async getAdminsPost(take?: number, skip?: number): Promise<PostEntity[]> {
+    return this.repository.find({
+      where: {
+        owner: {
+          role: UserRole.ADDED_BY_ADMIN,
+        },
         status: PostStatusEnum.PENDING,
       },
 

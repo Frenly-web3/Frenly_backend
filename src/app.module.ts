@@ -34,7 +34,6 @@ import { AuthenticationService } from './services/authentication.service';
 import { CurrentUserService } from './services/current-user.service';
 import { IPFSService } from './services/ipfs.service';
 import { FeedService } from './services/feed.service';
-import { DraftsService } from './services/drafts.service';
 
 import { UserRepository } from './repository/user.repository';
 import { ProcessedBlocksRepository } from './repository/processed-blocks.repository';
@@ -42,12 +41,12 @@ import { RefreshTokenRepository } from './repository/refresh-token.repository';
 import { PostRepository } from './repository/post.repository';
 import { NftTokenPostRepository } from './repository/nft-token-post.repository';
 import { NftMetadataRepository } from './repository/nft-metadata.repository';
-import { SubscriptionRepository } from './repository/subscription.repository';
 
 import { BlockSubscriberController } from './controller/block-subscriber.controller';
 import { AuthenticationController } from './controller/authentication.controller';
 import { FeedController } from './controller/feed.controller';
-import { DraftsController } from './controller/drafts.controller';
+import { AdminController } from './controller/admin.controller';
+import { AdminService } from './services/admin.service';
 
 @Module({
   imports: [
@@ -83,7 +82,7 @@ import { DraftsController } from './controller/drafts.controller';
     BlockSubscriberController,
     AuthenticationController,
     FeedController,
-    DraftsController,
+    AdminController,
   ],
   providers: [
     {
@@ -110,7 +109,7 @@ import { DraftsController } from './controller/drafts.controller';
     CurrentUserService,
     IPFSService,
     FeedService,
-    DraftsService,
+    AdminService,
 
     JwtStrategy,
 
@@ -124,7 +123,6 @@ import { DraftsController } from './controller/drafts.controller';
     PostRepository,
     NftTokenPostRepository,
     NftMetadataRepository,
-    SubscriptionRepository,
   ],
 })
 export class AppModule implements NestModule {

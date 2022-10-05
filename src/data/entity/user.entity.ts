@@ -1,8 +1,7 @@
 import { AutoMap } from '@automapper/classes';
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { UserRole } from '../../infrastructure/config/enums/users-role.enum';
 
-import { CommentEntity } from './comment.entity';
-import { LikeEntity } from './like.entity';
 import { PostEntity } from './post.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
 
@@ -19,8 +18,11 @@ export class UserEntity {
   @AutoMap()
     walletAddress: string;
 
-  @Column({ name: 'is_registered', default: false })
-    isRegistered: boolean;
+  @Column({ name: 'has_lens_profile', default: false })
+    hasLensProfile: boolean;
+
+  @Column({ enum: UserRole, default: UserRole.BASIC_USER })
+    role: UserRole;
 
   @CreateDateColumn({ name: 'creation_date' })
     creationDate: Date;
@@ -35,10 +37,4 @@ export class UserEntity {
 
   @OneToMany(() => PostEntity, (post) => post.owner)
     posts: PostEntity[];
-
-  @OneToMany(() => CommentEntity, (comments) => comments.owner)
-    comments: CommentEntity[];
-
-  @OneToMany(() => LikeEntity, (likes) => likes.owner)
-    likes: LikeEntity[];
 }

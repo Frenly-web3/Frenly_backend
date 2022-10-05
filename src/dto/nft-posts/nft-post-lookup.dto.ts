@@ -1,23 +1,29 @@
 import { BlockchainTypeEnum } from '../../infrastructure/config/enums/blockchain-type.enum';
 
 export class NftPostLookupDto {
-  transactionHash: string;
-
-  tokenId: string;
+  id: number;
 
   fromAddress: string;
 
   toAddress: string;
 
+  tokenId: string;
+
   blockchainType: BlockchainTypeEnum;
 
   contractAddress: string;
 
-  metadataUri?: string;
+  tokenUri: string;
 
-  image?: string;
+  image: string;
 
-  isRepost: boolean;
+  transactionHash: string;
+
+  lensId: string;
+
+  isMirror: boolean;
 
   creationDate: Date;
+
+  transferType: string;
 }

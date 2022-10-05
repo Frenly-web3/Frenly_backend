@@ -2,14 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
-import { CommentEntity } from '../../data/entity/comment.entity';
-import { LikeEntity } from '../../data/entity/like.entity';
 import { NftMetadataEntity } from '../../data/entity/nft-metadata.entity';
 import { NftTokenPostEntity } from '../../data/entity/nft-token-post.entity';
 import { PostEntity } from '../../data/entity/post.entity';
 import { ProcessedBlocksEntity } from '../../data/entity/processed-blocks.entity';
 import { RefreshTokenEntity } from '../../data/entity/refresh-token.entity';
-import { SubscriptionEntity } from '../../data/entity/subscription.entity';
 import { UserEntity } from '../../data/entity/user.entity';
 
 @Injectable()
@@ -35,13 +32,10 @@ export class ApiConfigService {
       password: this.configService.get<string>('DB_PASSWORD'),
       database: this.configService.get<string>('DB_NAME'),
       entities: [
-        CommentEntity,
-        LikeEntity,
         NftMetadataEntity,
         NftTokenPostEntity,
         PostEntity,
         RefreshTokenEntity,
-        SubscriptionEntity,
         UserEntity,
         ProcessedBlocksEntity,
       ],
@@ -82,5 +76,9 @@ export class ApiConfigService {
 
   get polygonWebSocketProvider(): string {
     return this.configService.get<string>('POLYGON_WEB_SOCKET_PROVIDER');
+  }
+
+  get lensContractAddress(): string {
+    return this.configService.get<string>('LENS_CONTRACT_ADDRESS');
   }
 }

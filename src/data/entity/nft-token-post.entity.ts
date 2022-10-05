@@ -26,6 +26,12 @@ export class NftTokenPostEntity {
   @Column({ name: 'block_number' })
     blockNumber: number;
 
+  @Column({ name: 'lens_id', nullable: true })
+    lensId: string;
+
+  @Column({ name: 'is_mirror', default: false })
+    isMirror: boolean;
+
   // Relations
 
   @OneToOne(() => PostEntity, (post) => post.nftPost, { nullable: true })
