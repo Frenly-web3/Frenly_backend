@@ -5,7 +5,7 @@ pipeline {
     REGISTRY_HOST_REMOTE = credentials('docker-registry-domain')
     JENKINS_SERVER = credentials('jenkins-server')
     GIT_REPO_NAME = env.GIT_URL.replaceFirst(/^.*\/([^\/]+?).git$/, '$1').toLowerCase().trim()
-    SLACK_CHANNEL = 'C042KE1SV0A'
+    SLACK_CHANNEL = ''
   }
 
   stages {
@@ -96,7 +96,7 @@ pipeline {
                 DOCKER = credentials('DOCKER')
                 PGADMIN = credentials('PGADMIN')
                 SSH_PROFILE = ''
-                COMPOSE_PROJECT_NAME = ''
+                COMPOSE_PROJECT_NAME = 'frenly'
                 FOLDER = 'backend'
                 DOMAIN = ''
                 PRODUCTION_URL = ''
@@ -151,7 +151,7 @@ pipeline {
           }
 
           environment {
-            COMPOSE_PROJECT_NAME = 'socialfi'
+            COMPOSE_PROJECT_NAME = 'frenly'
             ENV_FILE = '.development.env'
           }
 
@@ -166,7 +166,7 @@ pipeline {
                 docker-compose --env-file ${ENV_FILE} up -d
               """
             }
-            notify_slack("Traefik backend startup success", "/rest")
+            notify_slack("Traefik backend startup success")
           }
         }
       }

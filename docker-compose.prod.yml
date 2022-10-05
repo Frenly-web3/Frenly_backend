@@ -20,6 +20,8 @@ services:
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=le"
       - "traefik.http.routers.backend.tls=true"
+    volumes:
+      - public:/app/public
     networks:
       - default
       - pg_db
