@@ -14,7 +14,7 @@ services:
     labels:
       - "custom.label=${COMPOSE_PROJECT_NAME}"
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/rest`)"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/rest`)"
       - "traefik.http.routers.backend.middlewares=rest-strip-prefix@docker,api-add-prefix@docker"
       - "traefik.http.middlewares.rest-strip-prefix.stripprefix.prefixes=/rest"
       - "traefik.http.middlewares.api-add-prefix.addprefix.prefix=/api"
