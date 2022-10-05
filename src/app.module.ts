@@ -33,6 +33,7 @@ import { ApiJWTService } from './services/jwt.service';
 import { AuthenticationService } from './services/authentication.service';
 import { CurrentUserService } from './services/current-user.service';
 import { IPFSService } from './services/ipfs.service';
+import { FeedService } from './services/feed.service';
 
 import { UserRepository } from './repository/user.repository';
 import { ProcessedBlocksRepository } from './repository/processed-blocks.repository';
@@ -40,9 +41,11 @@ import { RefreshTokenRepository } from './repository/refresh-token.repository';
 import { PostRepository } from './repository/post.repository';
 import { NftTokenPostRepository } from './repository/nft-token-post.repository';
 import { NftMetadataRepository } from './repository/nft-metadata.repository';
+import { SubscriptionRepository } from './repository/subscription.repository';
 
 import { BlockSubscriberController } from './controller/block-subscriber.controller';
 import { AuthenticationController } from './controller/authentication.controller';
+import { FeedController } from './controller/feed.controller';
 
 @Module({
   imports: [
@@ -77,6 +80,7 @@ import { AuthenticationController } from './controller/authentication.controller
   controllers: [
     BlockSubscriberController,
     AuthenticationController,
+    FeedController,
   ],
   providers: [
     {
@@ -102,6 +106,7 @@ import { AuthenticationController } from './controller/authentication.controller
     AuthenticationService,
     CurrentUserService,
     IPFSService,
+    FeedService,
 
     JwtStrategy,
 
@@ -115,6 +120,7 @@ import { AuthenticationController } from './controller/authentication.controller
     PostRepository,
     NftTokenPostRepository,
     NftMetadataRepository,
+    SubscriptionRepository,
   ],
 })
 export class AppModule implements NestModule {
