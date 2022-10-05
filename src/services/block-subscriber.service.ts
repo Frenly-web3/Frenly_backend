@@ -150,7 +150,7 @@ export class BlockSubscriberService {
         const creationDate = moment.unix(Number(blockHeader.timestamp)).toDate();
         const updateDate = moment.unix(Number(blockHeader.timestamp)).toDate();
 
-        const postStatus = member.isRegistered ? PostStatusEnum.PENDING : PostStatusEnum.SYSTEM_PUBLISHED;
+        const postStatus = member.isRegistered ? PostStatusEnum.PENDING : PostStatusEnum.PUBLISHED;
 
         await this.postRepository.createNftTokenPost(
           member.id,

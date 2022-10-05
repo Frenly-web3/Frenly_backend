@@ -34,6 +34,7 @@ import { AuthenticationService } from './services/authentication.service';
 import { CurrentUserService } from './services/current-user.service';
 import { IPFSService } from './services/ipfs.service';
 import { FeedService } from './services/feed.service';
+import { DraftsService } from './services/drafts.service';
 
 import { UserRepository } from './repository/user.repository';
 import { ProcessedBlocksRepository } from './repository/processed-blocks.repository';
@@ -46,6 +47,7 @@ import { SubscriptionRepository } from './repository/subscription.repository';
 import { BlockSubscriberController } from './controller/block-subscriber.controller';
 import { AuthenticationController } from './controller/authentication.controller';
 import { FeedController } from './controller/feed.controller';
+import { DraftsController } from './controller/drafts.controller';
 
 @Module({
   imports: [
@@ -81,6 +83,7 @@ import { FeedController } from './controller/feed.controller';
     BlockSubscriberController,
     AuthenticationController,
     FeedController,
+    DraftsController,
   ],
   providers: [
     {
@@ -107,6 +110,7 @@ import { FeedController } from './controller/feed.controller';
     CurrentUserService,
     IPFSService,
     FeedService,
+    DraftsService,
 
     JwtStrategy,
 
