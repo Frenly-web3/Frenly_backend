@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Not, Repository } from 'typeorm';
 
 import { UserRepository } from './user.repository';
 import { NftTokenPostRepository } from './nft-token-post.repository';
+import { SubscriptionRepository } from './subscription.repository';
 
 import { PostEntity } from '../data/entity/post.entity';
 
@@ -20,10 +21,81 @@ export class PostRepository {
     private readonly connection: DataSource,
 
     private readonly userRepository: UserRepository,
+    private readonly subscriptionRepository: SubscriptionRepository,
 
     private readonly nftTokenPostRepository: NftTokenPostRepository,
   ) {
     this.repository = connection.getRepository(PostEntity);
+  }
+
+  // Feed
+
+  public async getTotalFeedByUserId(id: number, take?: number, skip?: number): Promise<PostEntity[]> {
+    return this.repository.find({
+      where: [
+        {
+          owner: { id: Not(id) },
+          status: PostStatusEnum.PUBLISHED,
+        },
+        {
+          owner: { id: Not(id) },
+          status: PostStatusEnum.SYSTEM_PUBLISHED,
+        },
+      ],
+
+      order: {
+        createdAt: 'DESC',
+      },
+
+      take,
+      skip,
+
+      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+    });
+  }
+
+  public async getOwnedFeedByUserId(id: number, take?: number, skip?: number): Promise<PostEntity[]> {
+    return this.repository.find({
+      where: [
+        {
+          owner: { id },
+          status: PostStatusEnum.PUBLISHED,
+        },
+        {
+          owner: { id },
+          status: PostStatusEnum.PUBLISHED,
+        },
+      ],
+
+      order: {
+        createdAt: 'DESC',
+      },
+
+      take,
+      skip,
+
+      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+    });
+  }
+
+  public async getRespondentsFeedByUserId(id: number, take?: number, skip?: number): Promise<PostEntity[]> {
+    const respondents = await this.subscriptionRepository.getUserRespondentsById(id);
+    const respondentsIds = respondents.map((e) => e.id);
+
+    return this.repository.find({
+      where: {
+        owner: { id: In(respondentsIds) },
+      },
+
+      order: {
+        createdAt: 'DESC',
+      },
+
+      take,
+      skip,
+
+      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+    });
   }
 
   public async createNftTokenPost(
