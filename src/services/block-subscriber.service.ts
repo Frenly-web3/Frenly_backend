@@ -66,6 +66,9 @@ export class BlockSubscriberService {
     const polygonConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.POLYGON_MAINNET);
     const ethConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.ETHEREUM);
 
+    // const block = await polygonConfig.web3.eth.getBlock(34032500);
+    // await this.onBlockHeader(BlockchainTypeEnum.POLYGON_MAINNET, block);
+
     const polygonSubscription = polygonConfig.web3.eth.subscribe('newBlockHeaders')
       .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.POLYGON_MAINNET))
       .on('error', this.unsubscribe.bind(this));
@@ -222,7 +225,7 @@ export class BlockSubscriberService {
 
       const intersection = users.filter((e) => topicAddresses.includes(e.walletAddress));
 
-      if (intersection.length !== 0 && await baseContract.isContractAddress(log.address.toLowerCase())) {
+      if (intersection.length !== 0) {
         if (await baseContract.isERC721Contract()) {
           const erc721TransferData = await this.transactionLogToERC721TransferData(log, type);
           ERCTransfers.push(erc721TransferData);
