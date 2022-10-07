@@ -8,6 +8,8 @@ export class BlockChainConfig {
 
   readonly web3: Web3;
 
+  readonly wsProvider: any;
+
   constructor(
     private readonly provider: string,
     readonly blockchainType: BlockchainTypeEnum,
@@ -17,9 +19,15 @@ export class BlockChainConfig {
         maxReceivedFrameSize: 100000000,
         maxReceivedMessageSize: 100000000,
       },
+
+      reconnect: {
+        auto: true,
+      },
     };
 
-    this.web3 = new Web3(new Web3.providers.WebsocketProvider(provider, wsOptions));
+    this.wsProvider = new Web3.providers.WebsocketProvider(provider, wsOptions);
+
+    this.web3 = new Web3(this.wsProvider);
     this.NFTContractFactory = new BaseNFTContractFactory(provider);
   }
 }

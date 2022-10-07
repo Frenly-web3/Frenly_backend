@@ -12,6 +12,8 @@ export class BaseNFTContract {
 
   private readonly web3: Web3;
 
+  private readonly wsProvider: any;
+
   private contract: Contract;
 
   private logger = new Logger();
@@ -25,10 +27,19 @@ export class BaseNFTContract {
         maxReceivedFrameSize: 100000000,
         maxReceivedMessageSize: 100000000,
       },
+      reconnect: {
+        auto: true,
+      },
     };
 
-    this.web3 = new Web3(new Web3.providers.WebsocketProvider(provider, wsOptions));
+    this.wsProvider = new Web3.providers.WebsocketProvider(provider, wsOptions);
+
+    this.web3 = new Web3(this.wsProvider);
     this.contract = new this.web3.eth.Contract(BaseContractAbi as AbiItem[], address);
+  }
+
+  public async disconnect(): Promise<void> {
+    await this.wsProvider.disconnect();
   }
 
   public async tokenName(): Promise<string> {

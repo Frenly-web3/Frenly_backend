@@ -14,10 +14,10 @@ export class NftMetadataEntity {
   @JoinColumn({ name: 'transfer_id' })
     nftPost: NftTokenPostEntity;
 
-  @Column({ name: 'metadata_uri' })
+  @Column({ name: 'metadata_uri', nullable: true })
     metadataUri: string;
 
-  @Column({ name: 'image' })
+  @Column({ name: 'image', nullable: true })
     image: string;
 
   @Column({ name: 'blockchain_type', enum: BlockchainTypeEnum })

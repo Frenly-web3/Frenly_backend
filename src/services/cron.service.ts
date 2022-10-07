@@ -11,7 +11,7 @@ export class CronService {
     private readonly blockSubscriberService: BlockSubscriberService,
   ) {}
 
-  @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_30_MINUTES)
   async fetchMissedBlocks() {
     const { isSubscribed } = await this.blockSubscriberService.status();
 

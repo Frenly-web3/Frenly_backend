@@ -66,9 +66,6 @@ export class BlockSubscriberService {
     const polygonConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.POLYGON_MAINNET);
     const ethConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.ETHEREUM);
 
-    // const block = await polygonConfig.web3.eth.getBlock(34032500);
-    // await this.onBlockHeader(BlockchainTypeEnum.POLYGON_MAINNET, block);
-
     const polygonSubscription = polygonConfig.web3.eth.subscribe('newBlockHeaders')
       .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.POLYGON_MAINNET))
       .on('error', this.unsubscribe.bind(this));
@@ -215,6 +212,7 @@ export class BlockSubscriberService {
 
   private async getERCTransfersData(logs: ITransactionLog[], type: BlockchainTypeEnum): Promise<IERCTransferData[]> {
     const { NFTContractFactory } = this.blockchainStorage.getConfig(type);
+
     const ERCTransfers: IERCTransferData[] = [];
 
     for (const log of logs) {
@@ -225,7 +223,7 @@ export class BlockSubscriberService {
 
       const intersection = users.filter((e) => topicAddresses.includes(e.walletAddress));
 
-      if (intersection.length !== 0) {
+      if (intersection.length !== 0 && await baseContract.isContractAddress(log.address.toLowerCase())) {
         if (await baseContract.isERC721Contract()) {
           const erc721TransferData = await this.transactionLogToERC721TransferData(log, type);
           ERCTransfers.push(erc721TransferData);
@@ -236,6 +234,8 @@ export class BlockSubscriberService {
           ERCTransfers.push(erc1155TransferData);
         }
       }
+
+      await baseContract.disconnect();
     }
 
     return ERCTransfers;
@@ -300,7 +300,7 @@ export class BlockSubscriberService {
     const baseContract = NFTContractFactory.createBaseContract(transactionLog.address);
     const tokenURI = await baseContract.ERC721tokenURI(tokenId);
 
-    return {
+    const data = {
       transactionHash: transactionLog.transactionHash,
       logIndex: transactionLog.logIndex,
       type: ERCTokenEnum.ERC_721,
@@ -314,6 +314,10 @@ export class BlockSubscriberService {
       toAddress: transactionLog.topics[2].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX).toLowerCase(),
       imageURI: await this.getTokenImageURI(tokenURI),
     };
+
+    await baseContract.disconnect();
+
+    return data;
   }
 
   private async transactionLogToERC1155TransferData(transactionLog: ITransactionLog, type: BlockchainTypeEnum): Promise<IERCTransferData> {
@@ -331,7 +335,7 @@ export class BlockSubscriberService {
 
     const tokenURI = await baseContract.ERC1155tokenURI(tokenId);
 
-    return {
+    const transferData = {
       transactionHash: transactionLog.transactionHash,
       logIndex: transactionLog.logIndex,
       type: ERCTokenEnum.ERC_1155,
@@ -345,6 +349,10 @@ export class BlockSubscriberService {
       toAddress: transactionLog.topics[3].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX).toLowerCase(),
       imageURI: await this.getTokenImageURI(tokenURI),
     };
+
+    await baseContract.disconnect();
+
+    return transferData;
   }
 
   // Additional Helpers
