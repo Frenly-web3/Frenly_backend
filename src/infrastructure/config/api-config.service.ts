@@ -78,6 +78,14 @@ export class ApiConfigService {
     return this.configService.get<string>('POLYGON_WEB_SOCKET_PROVIDER');
   }
 
+  get ethHttpProvider(): string {
+    return this.configService.get<string>('ETH_HTTP_PROVIDER');
+  }
+
+  get polygonHttpProvider(): string {
+    return this.configService.get<string>('POLYGON_HTTP_PROVIDER');
+  }
+
   get lensContractAddress(): string {
     return this.configService.get<string>('LENS_CONTRACT_ADDRESS');
   }

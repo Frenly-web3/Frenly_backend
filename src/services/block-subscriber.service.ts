@@ -63,18 +63,12 @@ export class BlockSubscriberService {
 
     this.isSubscribed = true;
 
-    const polygonConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.POLYGON_MAINNET);
     const ethConfig = this.blockchainStorage.getConfig(BlockchainTypeEnum.ETHEREUM);
-
-    const polygonSubscription = polygonConfig.web3.eth.subscribe('newBlockHeaders')
-      .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.POLYGON_MAINNET))
-      .on('error', this.unsubscribe.bind(this));
 
     const ethSubscription = ethConfig.web3.eth.subscribe('newBlockHeaders')
       .on('data', this.onBlockHeader.bind(this, BlockchainTypeEnum.ETHEREUM))
       .on('error', this.unsubscribe.bind(this));
 
-    this.subscriptions.push(polygonSubscription);
     this.subscriptions.push(ethSubscription);
   }
 
@@ -234,8 +228,6 @@ export class BlockSubscriberService {
           ERCTransfers.push(erc1155TransferData);
         }
       }
-
-      await baseContract.disconnect();
     }
 
     return ERCTransfers;
@@ -315,8 +307,6 @@ export class BlockSubscriberService {
       imageURI: await this.getTokenImageURI(tokenURI),
     };
 
-    await baseContract.disconnect();
-
     return data;
   }
 
@@ -349,8 +339,6 @@ export class BlockSubscriberService {
       toAddress: transactionLog.topics[3].replace(ETHMethods.EXTRA_BITS_PER_METHOD_ADDRESS, Hex.PREFIX).toLowerCase(),
       imageURI: await this.getTokenImageURI(tokenURI),
     };
-
-    await baseContract.disconnect();
 
     return transferData;
   }

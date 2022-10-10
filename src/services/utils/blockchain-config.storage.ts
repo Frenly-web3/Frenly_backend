@@ -24,21 +24,24 @@ export class BlockchainConfigStorage {
     }
 
     let provider = '';
+    let httpProvider = '';
 
     switch (type) {
       case BlockchainTypeEnum.ETHEREUM:
         provider = this.configService.ethWebSocketProvider;
+        httpProvider = this.configService.ethHttpProvider;
         break;
 
       case BlockchainTypeEnum.POLYGON_MAINNET:
         provider = this.configService.polygonWebSocketProvider;
+        httpProvider = this.configService.polygonHttpProvider;
         break;
 
       default:
         throw new BadRequestException(ErrorMessages.INVALID_PROVIDER);
     }
 
-    const config = new BlockChainConfig(provider, type);
+    const config = new BlockChainConfig(provider, httpProvider, type);
     this.blockchainConfigs.push(config);
   }
 

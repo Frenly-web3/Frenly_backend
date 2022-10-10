@@ -12,6 +12,7 @@ export class BlockChainConfig {
 
   constructor(
     private readonly provider: string,
+    private readonly httpProvider: string,
     readonly blockchainType: BlockchainTypeEnum,
   ) {
     const wsOptions = {
@@ -28,6 +29,6 @@ export class BlockChainConfig {
     this.wsProvider = new Web3.providers.WebsocketProvider(provider, wsOptions);
 
     this.web3 = new Web3(this.wsProvider);
-    this.NFTContractFactory = new BaseNFTContractFactory(provider);
+    this.NFTContractFactory = new BaseNFTContractFactory(httpProvider);
   }
 }
