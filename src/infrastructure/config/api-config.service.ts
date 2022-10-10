@@ -86,6 +86,10 @@ export class ApiConfigService {
     return this.configService.get<string>('POLYGON_HTTP_PROVIDER');
   }
 
+  get polygonMumbaiProvider(): string {
+    return this.configService.get<string>('POLYGON_MUMBAI_PROVIDER');
+  }
+
   get lensContractAddress(): string {
     return this.configService.get<string>('LENS_CONTRACT_ADDRESS');
   }
