@@ -17,6 +17,12 @@ export class UserEntity {
   @Column({ nullable: true })
     avatar: string;
 
+  @Column({ nullable: true })
+    username: string;
+
+  @Column({ nullable: true })
+    description: string;
+
   @Column({ name: 'wallet_address' })
   @AutoMap()
     walletAddress: string;
