@@ -50,7 +50,7 @@ export class AuthenticationService {
 
     const lensProfiles = await this.lensContract.methods.balanceOf(walletAddress.toLowerCase()).call();
 
-    user.hasLensProfile = lensProfiles !== 0;
+    user.hasLensProfile = Number(lensProfiles) !== 0;
     this.userRepository.save(user);
 
     return user.hasLensProfile;
