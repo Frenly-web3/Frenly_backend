@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Put, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { UserService } from '../services/user.service';
@@ -8,6 +8,7 @@ import { ImageFilesInterceptor } from '../infrastructure/middlewares/interceptor
 
 import { WalletAddressDto } from '../dto/user/wallet-address.dto';
 import { UserDescriptionDto } from '../dto/user/user-description.dto';
+import { UpdateUserDto } from '../dto/user/update-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -18,6 +19,12 @@ export class UserController {
   @Get('/:walletAddress')
   public async getUserInfo(@Param() { walletAddress }: WalletAddressDto): Promise<UserDescriptionDto> {
     return this.userService.getUserInfo(walletAddress);
+  }
+
+  @Put('')
+  @UseGuards(AuthGuard())
+  public async updateUser(@Body() dto: UpdateUserDto): Promise<void> {
+    return this.userService.updateUser(dto);
   }
 
   @Put('avatar')
