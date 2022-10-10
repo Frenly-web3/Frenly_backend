@@ -20,4 +20,6 @@ export class ErrorMessages {
   public static readonly PROVIDER_NOT_EXISTS = 'This provider not exists';
 
   public static readonly OWN_POST_REPOST = 'Cant repost own post';
+
+  public static readonly INVALID_FILE_FORMAT = 'Invalid file format provided.';
 }
