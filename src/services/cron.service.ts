@@ -11,7 +11,7 @@ export class CronService {
     private readonly blockSubscriberService: BlockSubscriberService,
   ) {}
 
-  @Cron(CronExpression.EVERY_10_MINUTES)
+  @Cron(CronExpression.EVERY_HOUR)
   async fetchMissedBlocks() {
     const { isSubscribed } = await this.blockSubscriberService.status();
 
@@ -20,7 +20,6 @@ export class CronService {
     }
 
     try {
-      await this.blockSubscriberService.fetchMissedBlocks(BlockchainTypeEnum.POLYGON_MAINNET);
       await this.blockSubscriberService.fetchMissedBlocks(BlockchainTypeEnum.ETHEREUM);
     } catch (e) {
       if (e instanceof Error && e.message === 'CONNECTION ERROR: Provider started to reconnect before the response got received!') {
