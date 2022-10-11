@@ -224,6 +224,12 @@ export class FeedService {
       displayType: PublicationMetadataDisplayType.string,
     });
 
+    attributes.push({
+      value: data?.image ?? '',
+      traitType: 'image',
+      displayType: PublicationMetadataDisplayType.string,
+    });
+
     return {
       version: PublicationMetadataVersions.two,
       metadata_id: data.id.toString(),
