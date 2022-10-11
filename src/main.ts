@@ -42,7 +42,7 @@ async function bootstrap() {
   blockchainStorage.addConfig(BlockchainTypeEnum.POLYGON_MAINNET);
 
   const blockSubscriber = app.get(BlockSubscriberService);
-  // await blockSubscriber.subscribe();
+  await blockSubscriber.subscribe();
 
   app.setGlobalPrefix('api');
   app.enableCors();

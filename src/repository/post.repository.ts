@@ -101,7 +101,7 @@ export class PostRepository {
         status: PostStatusEnum.PENDING,
       },
 
-      relations: ['owner'],
+      relations: ['owner', 'nftPost', 'nftPost.metadata'],
     });
   }
 
