@@ -260,6 +260,7 @@ export class FeedService {
       contentWrapper.tokenUri = content.nftPost.metadata.metadataUri;
       contentWrapper.transactionHash = content.nftPost.txHash;
       contentWrapper.image = content.nftPost.metadata.image;
+      contentWrapper.lensId = content.nftPost.lensId;
 
       result.push(contentWrapper);
     }
