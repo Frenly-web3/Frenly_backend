@@ -32,4 +32,8 @@ export class NftMetadataRepository {
 
     return this.repository.save(entity);
   }
+
+  public async save(entity: NftMetadataEntity): Promise<NftMetadataEntity> {
+    return this.repository.save(entity);
+  }
 }

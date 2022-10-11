@@ -169,6 +169,10 @@ export class PostRepository {
   }
 
   public async save(entity: PostEntity): Promise<PostEntity> {
+    if (entity?.nftPost != null) {
+      await this.nftTokenPostRepository.save(entity.nftPost);
+    }
+
     return this.repository.save(entity);
   }
 }

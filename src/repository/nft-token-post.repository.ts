@@ -41,4 +41,12 @@ export class NftTokenPostRepository {
 
     return entity;
   }
+
+  public async save(entity: NftTokenPostEntity): Promise<NftTokenPostEntity> {
+    if (entity?.metadata != null) {
+      await this.metadataRepository.save(entity.metadata);
+    }
+
+    return this.repository.save(entity);
+  }
 }
