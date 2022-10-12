@@ -174,6 +174,7 @@ export class AdminService {
       contentWrapper.transactionHash = content.nftPost.txHash;
       contentWrapper.image = content.nftPost.metadata.image;
       contentWrapper.lensId = content.nftPost.lensId;
+      contentWrapper.isMirror = content.nftPost.isMirror;
 
       result.push(contentWrapper);
     }
