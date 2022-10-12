@@ -21,9 +21,11 @@ export class BlockChainConfig {
         maxReceivedMessageSize: 100000000,
       },
 
-      reconnect: {
-        auto: true,
-      },
+      // reconnect: {
+      //   auto: true,
+      //   maxAttempts: 15,
+      //   delay: 1000,
+      // },
     };
 
     this.wsProvider = new Web3.providers.WebsocketProvider(provider, wsOptions);
