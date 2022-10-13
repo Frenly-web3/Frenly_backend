@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 /* eslint-disable no-continue */
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 
@@ -5,6 +6,7 @@ import moment from 'moment';
 import axios from 'axios';
 import fs from 'fs';
 import { v4 } from 'uuid';
+import path from 'path';
 
 import { UserRepository } from '../repository/user.repository';
 import { ProcessedBlocksRepository } from '../repository/processed-blocks.repository';
@@ -350,7 +352,27 @@ export class BlockSubscriberService {
   }
 
   private async getTokenImageURI(tokenURI: string): Promise<string> {
+    const base64Encoding = 'data:application/json;base64,';
+    const ipfsProtocol = 'ipfs://';
+
     try {
+      // IF BASE 64
+      if (tokenURI.includes(base64Encoding)) {
+        const base64 = tokenURI.replace(base64Encoding, '');
+        const value = Buffer.from(base64, 'base64').toString();
+
+        const obj = JSON.parse(value);
+
+        return obj?.image;
+      }
+
+      // IF IPFS PROTOCOL
+
+      if (tokenURI.includes(ipfsProtocol)) {
+        tokenURI = tokenURI.replace(ipfsProtocol, 'https://ipfs.io/ipfs/');
+      }
+
+      // IF JSON AT URL
       const { data } = await axios.get(tokenURI);
 
       if (data?.image != null) {
@@ -364,8 +386,41 @@ export class BlockSubscriberService {
   }
 
   private async downloadFile(fileUrl: string, outputLocationPath: string): Promise<void> {
-    const writer = fs.createWriteStream(outputLocationPath);
+    const base64Image = 'data:image/';
+    const ipfsProtocol = 'ipfs://';
 
+    // BASE64
+
+    if (fileUrl.includes(base64Image)) {
+      const extname = path.extname(outputLocationPath);
+
+      const endOfMetadata = fileUrl.indexOf(',');
+      const base64Data = fileUrl.slice(endOfMetadata + 1);
+
+      if (fileUrl.includes('svg')) {
+        outputLocationPath = outputLocationPath.replace(extname, '.svg');
+      }
+
+      if (fileUrl.includes('gif')) {
+        outputLocationPath = outputLocationPath.replace(extname, '.gif');
+      }
+
+      if (fileUrl.includes('webp')) {
+        outputLocationPath = outputLocationPath.replace(extname, '.webp');
+      }
+
+      const buffer = Buffer.from(base64Data, 'base64');
+      fs.writeFileSync(outputLocationPath, buffer);
+
+      return;
+    }
+
+    if (fileUrl.includes(ipfsProtocol)) {
+      fileUrl = fileUrl.replace(ipfsProtocol, 'https://ipfs.io/ipfs/');
+    }
+
+    // URL
+    const writer = fs.createWriteStream(outputLocationPath);
     const { data } = await axios.get(fileUrl, {
       responseType: 'stream',
       maxBodyLength: 1000000000000000,
