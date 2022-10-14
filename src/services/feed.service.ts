@@ -5,6 +5,7 @@ import { IPFSService } from './ipfs.service';
 
 import { UserRepository } from '../repository/user.repository';
 import { PostRepository } from '../repository/post.repository';
+import { SubscriptionRepository } from '../repository/subscriptions.repository';
 
 import { ErrorMessages } from '../infrastructure/config/const/error-messages.const';
 
@@ -31,12 +32,41 @@ export class FeedService {
 
     private readonly userRepository: UserRepository,
     private readonly postRepository: PostRepository,
+    private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 
   public async getFeed(take: number, skip: number): Promise<NftPostLookupDto[]> {
     const feed = await this.postRepository.getTotalFeedByUserId(take, skip);
 
     return this.mapUserContent(feed);
+  }
+
+  public async getFilteredFeed(take: number, skip: number): Promise<NftPostLookupDto[]> {
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const user = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
+
+    // GET SUBSCRIPTION POSTS
+
+    const subscriptions = await this.subscriptionRepository.getUserRespondentsById(user.id);
+    const subscriptionsIds = subscriptions.map((e) => e.id);
+
+    const subsPosts = await this.postRepository.getOwnedFeedByUserIds(subscriptionsIds);
+    const subsPostsIds = subsPosts.map((e) => e.id);
+
+    // GET ADMINS POSTS
+
+    const appPosts = await this.postRepository.getAdminsPublishedPost(subsPostsIds);
+    const appPostsIds = appPosts.map((e) => e.id);
+
+    // OTHER POSTS
+
+    const otherPosts = await this.postRepository.getTotalFeedWithExclusion([...subsPostsIds, ...appPostsIds]);
+
+    // RESULTS
+
+    const result = [...subsPosts, ...appPosts, ...otherPosts].slice(skip).slice(0, take);
+
+    return this.mapUserContent(result);
   }
 
   public async getUnpublishedContent(): Promise<NftPostLookupDto[]> {

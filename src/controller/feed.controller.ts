@@ -20,6 +20,12 @@ export class FeedController {
     return this.feedService.getFeed(take, skip);
   }
 
+  @Get('filtered')
+  @UseGuards(AuthGuard())
+  public async getFiltered(@Query() { take, skip }: PagingData): Promise<NftPostLookupDto[]> {
+    return this.feedService.getFilteredFeed(take, skip);
+  }
+
   @Get('unpublished')
   @UseGuards(AuthGuard())
   public async getUnpublished(): Promise<NftPostLookupDto[]> {

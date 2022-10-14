@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Not, Repository } from 'typeorm';
 
 import { UserRepository } from './user.repository';
 import { NftTokenPostRepository } from './nft-token-post.repository';
@@ -74,10 +74,46 @@ export class PostRepository {
     });
   }
 
+  public async getTotalFeedWithExclusion(excludedIds: number[], take?: number, skip?: number): Promise<PostEntity[]> {
+    return this.repository.find({
+      where: {
+        status: PostStatusEnum.PUBLISHED,
+        id: Not(In(excludedIds)),
+      },
+
+      order: {
+        createdAt: 'DESC',
+      },
+
+      take,
+      skip,
+
+      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+    });
+  }
+
   public async getOwnedFeedByUserId(id: number, take?: number, skip?: number): Promise<PostEntity[]> {
     return this.repository.find({
       where: {
         owner: { id },
+        status: PostStatusEnum.PUBLISHED,
+      },
+
+      order: {
+        createdAt: 'DESC',
+      },
+
+      take,
+      skip,
+
+      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+    });
+  }
+
+  public async getOwnedFeedByUserIds(ids: number[], take?: number, skip?: number): Promise<PostEntity[]> {
+    return this.repository.find({
+      where: {
+        owner: { id: In(ids) },
         status: PostStatusEnum.PUBLISHED,
       },
 
@@ -132,6 +168,27 @@ export class PostRepository {
           role: UserRole.ADDED_BY_ADMIN,
         },
         status: PostStatusEnum.PENDING,
+      },
+
+      order: {
+        createdAt: 'DESC',
+      },
+
+      take,
+      skip,
+
+      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+    });
+  }
+
+  public async getAdminsPublishedPost(notIncludedIds?: number[], take?: number, skip?: number): Promise<PostEntity[]> {
+    return this.repository.find({
+      where: {
+        owner: {
+          role: UserRole.ADDED_BY_ADMIN,
+        },
+        status: PostStatusEnum.PUBLISHED,
+        id: Not(In(notIncludedIds)),
       },
 
       order: {
