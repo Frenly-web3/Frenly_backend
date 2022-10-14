@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Put, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { UserService } from '../services/user.service';
@@ -32,5 +32,11 @@ export class UserController {
   @UseInterceptors(ImageFilesInterceptor([{ name: 'avatar', maxCount: 1 }], ImageFileFolder.AVATAR))
   public async uploadAvatar(@UploadedFiles() files: { avatar?: Express.Multer.File }): Promise<void> {
     return this.userService.uploadAvatar(files.avatar[0]);
+  }
+
+  @Post('/subscribe/:walletAddress')
+  @UseGuards(AuthGuard())
+  public async subscribe(@Param() { walletAddress }: WalletAddressDto): Promise<void> {
+    return this.userService.subscribe(walletAddress);
   }
 }

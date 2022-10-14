@@ -21,5 +21,7 @@ export class ErrorMessages {
 
   public static readonly OWN_POST_REPOST = 'Cant repost own post';
 
+  public static readonly USER_ALREADY_SUBSCRIBED = 'Subscription already exists';
+
   public static readonly INVALID_FILE_FORMAT = 'Invalid file format provided.';
 }

@@ -7,6 +7,7 @@ import { NftTokenPostEntity } from '../../data/entity/nft-token-post.entity';
 import { PostEntity } from '../../data/entity/post.entity';
 import { ProcessedBlocksEntity } from '../../data/entity/processed-blocks.entity';
 import { RefreshTokenEntity } from '../../data/entity/refresh-token.entity';
+import { SubscriptionEntity } from '../../data/entity/subscription.entity';
 import { UserEntity } from '../../data/entity/user.entity';
 
 @Injectable()
@@ -38,6 +39,7 @@ export class ApiConfigService {
         RefreshTokenEntity,
         UserEntity,
         ProcessedBlocksEntity,
+        SubscriptionEntity,
       ],
       keepConnectionAlive: true,
       synchronize: false,

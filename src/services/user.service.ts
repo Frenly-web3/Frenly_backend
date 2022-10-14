@@ -1,10 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import fs from 'fs';
 
 import { CurrentUserService } from './current-user.service';
 
+import { ErrorMessages } from '../infrastructure/config/const/error-messages.const';
+
 import { UserRepository } from '../repository/user.repository';
+import { SubscriptionRepository } from '../repository/subscriptions.repository';
 
 import { UserDescriptionDto } from '../dto/user/user-description.dto';
 import { UpdateUserDto } from '../dto/user/update-user.dto';
@@ -15,6 +18,7 @@ export class UserService {
     private readonly currentUserService: CurrentUserService,
 
     private readonly userRepository: UserRepository,
+    private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 
   public async getUserInfo(walletAddress: string): Promise<UserDescriptionDto> {
@@ -54,5 +58,26 @@ export class UserService {
 
       throw e;
     }
+  }
+
+  public async subscribe(respondentAddress: string): Promise<void> {
+    // const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const walletAddress = '0xf1a3a43030c0cb79d1cf155c1bc4bec2f8236d92';
+
+    const respondent = await this.userRepository.getOneByWalletAddress(respondentAddress.toLowerCase());
+    const subscriber = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
+
+    if (respondent == null || subscriber == null) {
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
+
+    const totalSubscriptions = await this.subscriptionRepository.getUserRespondentsById(subscriber.id);
+    const existsSubscription = totalSubscriptions.find((e) => e.id === respondent.id);
+
+    if (existsSubscription != null) {
+      throw new BadRequestException(ErrorMessages.USER_ALREADY_SUBSCRIBED);
+    }
+
+    await this.subscriptionRepository.createSubscription(respondent.id, subscriber.id);
   }
 }

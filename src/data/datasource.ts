@@ -6,6 +6,7 @@ import { NftTokenPostEntity } from './entity/nft-token-post.entity';
 import { PostEntity } from './entity/post.entity';
 import { ProcessedBlocksEntity } from './entity/processed-blocks.entity';
 import { RefreshTokenEntity } from './entity/refresh-token.entity';
+import { SubscriptionEntity } from './entity/subscription.entity';
 import { UserEntity } from './entity/user.entity';
 
 dotenv.config({ path: `.${process.env.NODE_ENV}.env` });
@@ -25,6 +26,7 @@ export const AppDataSource = new DataSource({
     RefreshTokenEntity,
     UserEntity,
     ProcessedBlocksEntity,
+    SubscriptionEntity,
   ],
   migrations: ['src/data/migrations/*.*'],
   synchronize: false,

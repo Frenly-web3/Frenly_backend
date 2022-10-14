@@ -42,6 +42,7 @@ import { ProcessedBlocksRepository } from './repository/processed-blocks.reposit
 import { RefreshTokenRepository } from './repository/refresh-token.repository';
 import { PostRepository } from './repository/post.repository';
 import { NftTokenPostRepository } from './repository/nft-token-post.repository';
+import { SubscriptionRepository } from './repository/subscriptions.repository';
 import { NftMetadataRepository } from './repository/nft-metadata.repository';
 
 import { BlockSubscriberController } from './controller/block-subscriber.controller';
@@ -127,6 +128,7 @@ import { UserController } from './controller/user.controller';
     PostRepository,
     NftTokenPostRepository,
     NftMetadataRepository,
+    SubscriptionRepository,
   ],
 })
 export class AppModule implements NestModule {
