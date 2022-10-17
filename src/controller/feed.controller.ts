@@ -32,9 +32,15 @@ export class FeedController {
     return this.feedService.getUnpublishedContent();
   }
 
+  @Get('/:contentId/metadata')
+  @UseGuards(AuthGuard())
+  public async getContentMetadata(@Param() { contentId }: ContentIdDto): Promise<string> {
+    return this.feedService.getContentMetadata(contentId);
+  }
+
   @Post('/:contentId')
   @UseGuards(AuthGuard())
-  public async publishContent(@Param() { contentId }: ContentIdDto): Promise<string> {
+  public async publishContent(@Param() { contentId }: ContentIdDto): Promise<void> {
     return this.feedService.publishContent(contentId);
   }
 

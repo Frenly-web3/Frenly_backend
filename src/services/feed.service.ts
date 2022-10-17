@@ -82,7 +82,33 @@ export class FeedService {
     return this.mapUserContent(content);
   }
 
-  public async publishContent(contentId: number): Promise<string> {
+  public async getContentMetadata(contentId: number): Promise<string> {
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const currentUser = await this.userRepository.getOneByWalletAddress(walletAddress);
+
+    if (currentUser == null) {
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
+
+    if (!currentUser.hasLensProfile) {
+      throw new BadRequestException(ErrorMessages.NO_LENS_PROFILE);
+    }
+
+    const content = await this.postRepository.getDraftById(contentId);
+
+    if (content == null || content.owner.id !== currentUser.id) {
+      throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
+    }
+
+    const [mappedContent] = this.mapUserContent([content]);
+    const metadata = this.mapContentToMetadata(mappedContent);
+
+    const link = await this.ipfsService.upload(metadata);
+
+    return link;
+  }
+
+  public async publishContent(contentId: number): Promise<void> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
     const currentUser = await this.userRepository.getOneByWalletAddress(walletAddress);
 
@@ -102,13 +128,6 @@ export class FeedService {
 
     content.status = PostStatusEnum.PUBLISHED;
     await this.postRepository.save(content);
-
-    const [mappedContent] = this.mapUserContent([content]);
-    const metadata = this.mapContentToMetadata(mappedContent);
-
-    const link = await this.ipfsService.upload(metadata);
-
-    return link;
   }
 
   public async bindContentWithLensId(contentId: number, lensId: string): Promise<void> {
