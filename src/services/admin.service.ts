@@ -49,16 +49,12 @@ export class AdminService {
     return this.mapUserContent(posts);
   }
 
-  public async publishAdminsPost(id: number): Promise<string> {
+  public async getAdminsPostMetadata(id: number): Promise<string> {
     const post = await this.postRepository.getPostById(id);
 
     if (post == null || post.status !== PostStatusEnum.PENDING || post.owner.role !== UserRole.ADDED_BY_ADMIN) {
       throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
     }
-
-    post.status = PostStatusEnum.PUBLISHED;
-
-    await this.postRepository.save(post);
 
     const [mappedContent] = this.mapUserContent([post]);
     const metadata = this.mapContentToMetadata(mappedContent);
@@ -66,6 +62,17 @@ export class AdminService {
     const link = await this.ipfsService.upload(metadata);
 
     return link;
+  }
+
+  public async publishAdminsPost(id: number): Promise<void> {
+    const post = await this.postRepository.getPostById(id);
+
+    if (post == null || post.status !== PostStatusEnum.PENDING || post.owner.role !== UserRole.ADDED_BY_ADMIN) {
+      throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
+    }
+
+    post.status = PostStatusEnum.PUBLISHED;
+    await this.postRepository.save(post);
   }
 
   public async bindContentWithLensId(contentId: number, lensId: string): Promise<void> {

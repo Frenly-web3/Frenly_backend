@@ -23,6 +23,13 @@ export class AdminController {
     return this.adminService.getAdminsPost(take, skip);
   }
 
+  @Get('content/:contentId')
+  @Roles(UserRole.ADMIN)
+  @UseGuards(AuthGuard(), RolesGuard)
+  public async getMetadata(@Param() { contentId }: ContentIdDto): Promise<string> {
+    return this.adminService.getAdminsPostMetadata(contentId);
+  }
+
   @Post('user/:walletAddress')
   @Roles(UserRole.ADMIN)
   @UseGuards(AuthGuard(), RolesGuard)
@@ -33,7 +40,7 @@ export class AdminController {
   @Put('content/:contentId')
   @Roles(UserRole.ADMIN)
   @UseGuards(AuthGuard(), RolesGuard)
-  public async publishPost(@Param() { contentId }: ContentIdDto): Promise<string> {
+  public async publishPost(@Param() { contentId }: ContentIdDto): Promise<void> {
     return this.adminService.publishAdminsPost(contentId);
   }
 
