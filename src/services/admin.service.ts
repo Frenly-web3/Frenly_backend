@@ -86,6 +86,17 @@ export class AdminService {
     await this.postRepository.save(post);
   }
 
+  public async removeContent(contentId: number): Promise<void> {
+    const post = await this.postRepository.getPostById(contentId);
+
+    if (post == null || post.status !== PostStatusEnum.PUBLISHED || post.owner.role !== UserRole.ADDED_BY_ADMIN) {
+      throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
+    }
+
+    post.status = PostStatusEnum.UNPUBLISHED;
+    await this.postRepository.save(post);
+  }
+
   // MAPPING
   private mapContentToMetadata(data: NftPostLookupDto): LensMetadata {
     const attributes: PublicationMetadataAttribute[] = [];

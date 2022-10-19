@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ContentIdDto } from '../dto/nft-posts/content-id.dto';
 import { ContentWithLensIdsDto } from '../dto/nft-posts/content-with-lens-id.dto';
@@ -49,5 +49,12 @@ export class AdminController {
   @UseGuards(AuthGuard(), RolesGuard)
   public async bindContentWithLens(@Param() { contentId, lensId }: ContentWithLensIdsDto): Promise<void> {
     return this.adminService.bindContentWithLensId(contentId, lensId);
+  }
+
+  @Delete('content/:contentId')
+  @Roles(UserRole.ADMIN)
+  @UseGuards(AuthGuard(), RolesGuard)
+  public async removeContent(@Param() { contentId }: ContentIdDto): Promise<void> {
+    return this.adminService.removeContent(contentId);
   }
 }
