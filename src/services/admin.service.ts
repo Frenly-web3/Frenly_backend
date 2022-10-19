@@ -89,7 +89,7 @@ export class AdminService {
   public async removeContent(contentId: number): Promise<void> {
     const post = await this.postRepository.getPostById(contentId);
 
-    if (post == null || post.status !== PostStatusEnum.PUBLISHED || post.owner.role !== UserRole.ADDED_BY_ADMIN) {
+    if (post == null || post.status !== PostStatusEnum.PENDING || post.owner.role !== UserRole.ADDED_BY_ADMIN) {
       throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
     }
 
