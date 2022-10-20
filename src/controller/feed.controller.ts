@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { FeedService } from '../services/feed.service';
@@ -8,6 +8,7 @@ import { NftPostLookupDto } from '../dto/nft-posts/nft-post-lookup.dto';
 import { ContentIdDto } from '../dto/nft-posts/content-id.dto';
 import { LensMirrorDto } from '../dto/nft-posts/lens-mirror.dto';
 import { ContentWithLensIdsDto } from '../dto/nft-posts/content-with-lens-id.dto';
+import { RepostDescriptionDto } from '../dto/repost/repost-description.dto';
 
 @Controller('content')
 export class FeedController {
@@ -46,8 +47,8 @@ export class FeedController {
 
   @Post('/:lensId/repost/:newLensId')
   @UseGuards(AuthGuard())
-  public async repostContent(@Param() { lensId, newLensId }: LensMirrorDto): Promise<void> {
-    return this.feedService.repostContent(lensId, newLensId);
+  public async repostContent(@Param() { lensId, newLensId }: LensMirrorDto, @Body() { description }: RepostDescriptionDto): Promise<void> {
+    return this.feedService.repostContent(lensId, newLensId, description);
   }
 
   @Put('/:contentId/:lensId')

@@ -152,7 +152,7 @@ export class FeedService {
     await this.postRepository.save(content);
   }
 
-  public async repostContent(existsLensId: string, newLensId: string): Promise<void> {
+  public async repostContent(existsLensId: string, newLensId: string, description: string): Promise<void> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
     const { id } = await this.userRepository.getOneByWalletAddress(walletAddress);
 
@@ -192,6 +192,7 @@ export class FeedService {
 
     repost.nftPost.isMirror = true;
     repost.nftPost.lensId = newLensId;
+    repost.nftPost.mirrorDescription = description;
 
     await this.postRepository.save(repost);
   }
@@ -311,6 +312,7 @@ export class FeedService {
       contentWrapper.image = content.nftPost.metadata.image;
       contentWrapper.lensId = content.nftPost.lensId;
       contentWrapper.isMirror = content.nftPost.isMirror;
+      contentWrapper.mirrorDescription = content.nftPost.mirrorDescription;
 
       result.push(contentWrapper);
     }

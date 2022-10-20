@@ -23,6 +23,8 @@ export class NftPostLookupDto {
 
   isMirror: boolean;
 
+  mirrorDescription: string;
+
   creationDate: Date;
 
   transferType: string;

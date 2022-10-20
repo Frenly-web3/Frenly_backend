@@ -32,6 +32,9 @@ export class NftTokenPostEntity {
   @Column({ name: 'is_mirror', default: false })
     isMirror: boolean;
 
+  @Column({ name: 'mirror_description', nullable: true })
+    mirrorDescription: string;
+
   // Relations
 
   @OneToOne(() => PostEntity, (post) => post.nftPost, { nullable: true })
