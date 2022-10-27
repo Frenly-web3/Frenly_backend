@@ -32,24 +32,7 @@ export class CronService {
 
   @Cron(CronExpression.EVERY_4_HOURS)
   async restartSubscription() {
-    const { isSubscribed } = await this.blockSubscriberService.status();
-
-    if (!isSubscribed) {
-      return;
-    }
-
-    await this.blockSubscriberService.unsubscribe(null);
-
     this.logger.log('Start planned subscription restart');
-    await this.sleep(30000);
-    this.logger.log('Start planned subscription restart');
-
-    await this.blockSubscriberService.subscribe();
-  }
-
-  private async sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms);
-    });
+    process.exit(0);
   }
 }
