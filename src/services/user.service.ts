@@ -22,9 +22,9 @@ export class UserService {
   ) {}
 
   public async getUserInfo(walletAddress: string): Promise<UserDescriptionDto> {
-    const { avatar, username, description } = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
+    const user = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
 
-    return { avatar, username, description };
+    return { avatar: user?.avatar ?? null, username: user?.username ?? null, description: user?.description ?? null };
   }
 
   public async updateUser(dto: UpdateUserDto): Promise<void> {
