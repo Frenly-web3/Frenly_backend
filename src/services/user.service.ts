@@ -61,8 +61,7 @@ export class UserService {
   }
 
   public async subscribe(respondentAddress: string): Promise<void> {
-    // const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-    const walletAddress = '0xf1a3a43030c0cb79d1cf155c1bc4bec2f8236d92';
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
 
     const respondent = await this.userRepository.getOneByWalletAddress(respondentAddress.toLowerCase());
     const subscriber = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
