@@ -45,10 +45,11 @@ export class FeedService {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
     const user = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
 
-    // GET SUBSCRIPTION POSTS
+    // GET SUBSCRIPTION & OWN POSTS
 
     const subscriptions = await this.subscriptionRepository.getUserRespondentsById(user.id);
     const subscriptionsIds = subscriptions.map((e) => e.id);
+    subscriptionsIds.push(user.id);
 
     const subsPosts = await this.postRepository.getOwnedFeedByUserIds(subscriptionsIds);
     const subsPostsIds = subsPosts.map((e) => e.id);
