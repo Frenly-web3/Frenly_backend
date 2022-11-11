@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { v4 } from 'uuid';
 
 import { CurrentUserService } from './current-user.service';
 import { IPFSService } from './ipfs.service';
@@ -23,6 +24,7 @@ import { PostStatusEnum } from '../infrastructure/config/enums/post-status.enum'
 import { NftPostLookupDto } from '../dto/nft-posts/nft-post-lookup.dto';
 import { NftPostDto } from '../dto/nft-posts/nft-post.dto';
 import { TransferTypes } from '../infrastructure/config/const/transfer-types.const';
+import { CommentMetadataDto } from '../dto/comments/comment-metadata.dto';
 
 @Injectable()
 export class FeedService {
@@ -104,6 +106,13 @@ export class FeedService {
     const [mappedContent] = this.mapUserContent([content]);
     const metadata = this.mapContentToMetadata(mappedContent);
 
+    const link = await this.ipfsService.upload(metadata);
+
+    return link;
+  }
+
+  public async createCommentMetadata(data: CommentMetadataDto): Promise<string> {
+    const metadata = this.mapCommentMetadata(data);
     const link = await this.ipfsService.upload(metadata);
 
     return link;
@@ -289,6 +298,33 @@ export class FeedService {
       locale: 'en-Us',
       mainContentFocus: PublicationMainFocus.TEXT_ONLY,
       name: `SocialFi Post ${data.id}`,
+      attributes,
+    };
+  }
+
+  private mapCommentMetadata(data: CommentMetadataDto): LensMetadata {
+    const attributes: PublicationMetadataAttribute[] = [];
+
+    attributes.push({
+      value: data.comment,
+      traitType: 'comment',
+      displayType: PublicationMetadataDisplayType.string,
+    });
+
+    attributes.push({
+      value: data.lensId,
+      traitType: 'pubId',
+      displayType: PublicationMetadataDisplayType.string,
+    });
+
+    return {
+      version: PublicationMetadataVersions.two,
+      metadata_id: v4(),
+      description: 'SocialFi nft comment',
+      content: data.comment,
+      locale: 'en-Us',
+      mainContentFocus: PublicationMainFocus.TEXT_ONLY,
+      name: `SocialFi comment for ${data.lensId} post`,
       attributes,
     };
   }

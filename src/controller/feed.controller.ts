@@ -9,6 +9,7 @@ import { ContentIdDto } from '../dto/nft-posts/content-id.dto';
 import { LensMirrorDto } from '../dto/nft-posts/lens-mirror.dto';
 import { ContentWithLensIdsDto } from '../dto/nft-posts/content-with-lens-id.dto';
 import { RepostDescriptionDto } from '../dto/repost/repost-description.dto';
+import { CommentMetadataDto } from '../dto/comments/comment-metadata.dto';
 
 @Controller('content')
 export class FeedController {
@@ -37,6 +38,12 @@ export class FeedController {
   @UseGuards(AuthGuard())
   public async getContentMetadata(@Param() { contentId }: ContentIdDto): Promise<string> {
     return this.feedService.getContentMetadata(contentId);
+  }
+
+  @Post('/comment/metadata')
+  @UseGuards(AuthGuard())
+  public async createCommentMetadata(@Body() data: CommentMetadataDto): Promise<string> {
+    return this.feedService.createCommentMetadata(data);
   }
 
   @Post('/:contentId')
