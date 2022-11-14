@@ -34,6 +34,20 @@ export class SubscriptionRepository {
     return subscriptions.map((x) => x.respondent);
   }
 
+  public async getUserSubscribers(userId: number): Promise<UserEntity[]> {
+    const subscriptions = await this.repository.find({
+      where: {
+        respondent: {
+          id: userId,
+        },
+      },
+
+      relations: ['respondent', 'subscriber'],
+    });
+
+    return subscriptions.map((x) => x.respondent);
+  }
+
   public async createSubscription(respondentId: number, subscriberId: number): Promise<SubscriptionEntity> {
     const respondent = await this.userRepository.getOneById(respondentId);
     const subscriber = await this.userRepository.getOneById(subscriberId);
@@ -46,5 +60,22 @@ export class SubscriptionRepository {
     await this.repository.save(entity);
 
     return entity;
+  }
+
+  public async removeSubscription(respondentId: number, subscriberId: number): Promise<void> {
+    const subscription = await this.repository.findOne({
+      where: {
+        subscriber: {
+          id: subscriberId,
+        },
+        respondent: {
+          id: respondentId,
+        },
+      },
+
+      relations: ['respondent', 'subscriber'],
+    });
+
+    await this.repository.remove(subscription);
   }
 }

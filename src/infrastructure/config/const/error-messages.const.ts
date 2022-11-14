@@ -23,5 +23,7 @@ export class ErrorMessages {
 
   public static readonly USER_ALREADY_SUBSCRIBED = 'Subscription already exists';
 
+  public static readonly USER_NOT_SUBSCRIBED = 'Subscription is not already exists';
+
   public static readonly INVALID_FILE_FORMAT = 'Invalid file format provided.';
 }

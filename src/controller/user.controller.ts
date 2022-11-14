@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { UserService } from '../services/user.service';
@@ -21,6 +21,12 @@ export class UserController {
     return this.userService.getUserInfo(walletAddress);
   }
 
+  @Get('/:walletAddress/is-follow')
+  @UseGuards(AuthGuard())
+  public async isFollow(@Param() { walletAddress }: WalletAddressDto): Promise<boolean> {
+    return this.userService.isFollow(walletAddress);
+  }
+
   @Put('')
   @UseGuards(AuthGuard())
   public async updateUser(@Body() dto: UpdateUserDto): Promise<void> {
@@ -38,5 +44,11 @@ export class UserController {
   @UseGuards(AuthGuard())
   public async subscribe(@Param() { walletAddress }: WalletAddressDto): Promise<void> {
     return this.userService.subscribe(walletAddress);
+  }
+
+  @Delete('/unsubscribe/:walletAddress')
+  @UseGuards(AuthGuard())
+  public async unsubscribe(@Param() { walletAddress }: WalletAddressDto): Promise<void> {
+    return this.userService.unsubscribe(walletAddress);
   }
 }

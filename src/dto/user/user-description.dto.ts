@@ -4,4 +4,6 @@ export class UserDescriptionDto {
   avatar: string;
 
   description: string;
+
+  totalFollowers: number;
 }

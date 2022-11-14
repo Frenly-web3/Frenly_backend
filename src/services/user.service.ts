@@ -23,8 +23,30 @@ export class UserService {
 
   public async getUserInfo(walletAddress: string): Promise<UserDescriptionDto> {
     const user = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
+    const subscriptions = await this.subscriptionRepository.getUserSubscribers(user.id);
 
-    return { avatar: user?.avatar ?? null, username: user?.username ?? null, description: user?.description ?? null };
+    return {
+      avatar: user?.avatar ?? null,
+      username: user?.username ?? null,
+      description: user?.description ?? null,
+      totalFollowers: subscriptions.length,
+    };
+  }
+
+  public async isFollow(respondentAddress: string): Promise<boolean> {
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+
+    const respondent = await this.userRepository.getOneByWalletAddress(respondentAddress.toLowerCase());
+    const subscriber = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
+
+    if (respondent == null || subscriber == null) {
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
+
+    const totalSubscriptions = await this.subscriptionRepository.getUserRespondentsById(subscriber.id);
+    const existsSubscription = totalSubscriptions.find((e) => e.id === respondent.id);
+
+    return existsSubscription != null;
   }
 
   public async updateUser(dto: UpdateUserDto): Promise<void> {
@@ -78,5 +100,25 @@ export class UserService {
     }
 
     await this.subscriptionRepository.createSubscription(respondent.id, subscriber.id);
+  }
+
+  public async unsubscribe(respondentAddress: string): Promise<void> {
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+
+    const respondent = await this.userRepository.getOneByWalletAddress(respondentAddress.toLowerCase());
+    const subscriber = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
+
+    if (respondent == null || subscriber == null) {
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
+
+    const totalSubscriptions = await this.subscriptionRepository.getUserRespondentsById(subscriber.id);
+    const existsSubscription = totalSubscriptions.find((e) => e.id === respondent.id);
+
+    if (existsSubscription == null) {
+      throw new BadRequestException(ErrorMessages.USER_NOT_SUBSCRIBED);
+    }
+
+    await this.subscriptionRepository.removeSubscription(respondent.id, subscriber.id);
   }
 }
