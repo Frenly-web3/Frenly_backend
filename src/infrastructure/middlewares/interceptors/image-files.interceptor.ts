@@ -38,9 +38,6 @@ export const ImageFilesInterceptor = (fieldName: MulterField[], dest: ImageFileF
       destination,
       filename: editFileName,
     }),
-    limits: {
-      fileSize: 5000000,
-    },
     fileFilter: imageFileFormatFilter,
   });
 };
