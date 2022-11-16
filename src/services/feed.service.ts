@@ -172,10 +172,6 @@ export class FeedService {
       throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
     }
 
-    if (post.owner.id === id) {
-      throw new BadRequestException(ErrorMessages.OWN_POST_REPOST);
-    }
-
     const content: NftPostDto = {
       transactionHash: post.nftPost.txHash,
 
