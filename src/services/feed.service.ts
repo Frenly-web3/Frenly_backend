@@ -72,7 +72,7 @@ export class FeedService {
     return this.mapUserContent(result);
   }
 
-  public async getUnpublishedContent(): Promise<NftPostLookupDto[]> {
+  public async getUnpublishedContent(take: number, skip: number): Promise<NftPostLookupDto[]> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
     const currentUser = await this.userRepository.getOneByWalletAddress(walletAddress);
 
@@ -80,7 +80,7 @@ export class FeedService {
       throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
     }
 
-    const content = await this.postRepository.getDraftsByUserId(currentUser.id);
+    const content = await this.postRepository.getDraftsByUserId(currentUser.id, take, skip);
 
     return this.mapUserContent(content);
   }

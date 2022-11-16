@@ -30,8 +30,8 @@ export class FeedController {
 
   @Get('unpublished')
   @UseGuards(AuthGuard())
-  public async getUnpublished(): Promise<NftPostLookupDto[]> {
-    return this.feedService.getUnpublishedContent();
+  public async getUnpublished(@Query() { take, skip }: PagingData): Promise<NftPostLookupDto[]> {
+    return this.feedService.getUnpublishedContent(take, skip);
   }
 
   @Get('/:contentId/metadata')

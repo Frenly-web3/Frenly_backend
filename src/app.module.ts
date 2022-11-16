@@ -36,6 +36,7 @@ import { IPFSService } from './services/ipfs.service';
 import { FeedService } from './services/feed.service';
 import { AdminService } from './services/admin.service';
 import { UserService } from './services/user.service';
+import { ENSService } from './services/ens.service';
 
 import { UserRepository } from './repository/user.repository';
 import { ProcessedBlocksRepository } from './repository/processed-blocks.repository';
@@ -50,6 +51,7 @@ import { AuthenticationController } from './controller/authentication.controller
 import { FeedController } from './controller/feed.controller';
 import { AdminController } from './controller/admin.controller';
 import { UserController } from './controller/user.controller';
+import { ENSController } from './controller/ens.controller';
 
 @Module({
   imports: [
@@ -87,6 +89,7 @@ import { UserController } from './controller/user.controller';
     FeedController,
     AdminController,
     UserController,
+    ENSController,
   ],
   providers: [
     {
@@ -115,6 +118,7 @@ import { UserController } from './controller/user.controller';
     FeedService,
     AdminService,
     UserService,
+    ENSService,
 
     JwtStrategy,
 
