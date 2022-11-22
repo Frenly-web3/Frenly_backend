@@ -3,7 +3,8 @@ import { Type } from 'class-transformer';
 
 export class SellOrderDto {
   @IsOptional()
-    image: Express.Multer.File;
+  @IsString()
+    image: string;
 
   @IsString()
     walletAddress: string;

@@ -1,5 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import fs from 'fs';
+import { Injectable } from '@nestjs/common';
 
 import { CurrentUserService } from './current-user.service';
 
@@ -20,23 +19,14 @@ export class ZeroExService {
   ) {}
 
   async publishSellRequest(dto: SellOrderDto): Promise<number> {
-    try {
-      const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-      const { id } = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const { id } = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
 
-      const post = await this.postRepository.createZeroExPost(id, {
-        ...dto,
-        image: dto?.image?.filename,
-        type: PostTypeEnum.SELL_ORDER,
-      });
+    const post = await this.postRepository.createZeroExPost(id, {
+      ...dto,
+      type: PostTypeEnum.SELL_ORDER,
+    });
 
-      return post.id;
-    } catch (e) {
-      if (fs.existsSync(dto.image?.path)) {
-        fs.unlinkSync(dto.image?.path);
-      }
-
-      throw new BadRequestException(e);
-    }
+    return post.id;
   }
 }
