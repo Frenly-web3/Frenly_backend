@@ -19,6 +19,7 @@ const editFileName = (req, file, callback) => {
 };
 
 const avatarsFilePath = 'avatars';
+const zeroExSellFilePath = 'zeroex/sell';
 
 export const ImageFilesInterceptor = (fieldName: MulterField[], dest: ImageFileFolder) => {
   let destination = './public/';
@@ -26,6 +27,10 @@ export const ImageFilesInterceptor = (fieldName: MulterField[], dest: ImageFileF
   switch (dest) {
     case ImageFileFolder.AVATAR:
       destination = destination.concat(avatarsFilePath);
+      break;
+
+    case ImageFileFolder.ZEROEX_SELL:
+      destination = destination.concat(zeroExSellFilePath);
       break;
 
     default:

@@ -22,6 +22,8 @@
     "migration:down:production": "cross-env NODE_ENV=production ts-node ./node_modules/.bin/typeorm migration:revert -d ./src/data/datasource.ts"
   },
   "dependencies": {
+    "@0x/protocol-utils": "^11.17.1",
+    "@0x/utils": "^7.0.0",
     "@automapper/classes": "^8.7.6",
     "@automapper/core": "^8.7.6",
     "@automapper/nestjs": "^8.7.6",

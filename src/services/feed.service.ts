@@ -20,6 +20,7 @@ import { PublicationMetadataDisplayType } from '../infrastructure/config/enums/p
 import { PublicationMetadataVersions } from '../infrastructure/config/enums/publication-metadata-version.enum';
 import { PublicationMainFocus } from '../infrastructure/config/enums/publication-main-focus.enum';
 import { PostStatusEnum } from '../infrastructure/config/enums/post-status.enum';
+import { PostTypeEnum } from '../infrastructure/config/enums/post-type.enum';
 
 import { NftPostLookupDto } from '../dto/nft-posts/nft-post-lookup.dto';
 import { NftPostDto } from '../dto/nft-posts/nft-post.dto';
@@ -332,20 +333,29 @@ export class FeedService {
       const contentWrapper = new NftPostLookupDto();
 
       contentWrapper.creationDate = content.createdAt;
+      contentWrapper.postType = content.type;
       contentWrapper.id = content.id;
 
-      contentWrapper.blockchainType = content.nftPost.metadata.blockchainType;
-      contentWrapper.transferType = content.owner.walletAddress === content.nftPost.fromAddress ? TransferTypes.SEND : TransferTypes.RECEIVE;
-      contentWrapper.fromAddress = content.nftPost.fromAddress;
-      contentWrapper.toAddress = content.nftPost.toAddress;
-      contentWrapper.contractAddress = content.nftPost.scAddress;
-      contentWrapper.tokenId = content.nftPost.tokenId;
-      contentWrapper.tokenUri = content.nftPost.metadata.metadataUri;
-      contentWrapper.transactionHash = content.nftPost.txHash;
-      contentWrapper.image = content.nftPost.metadata.image;
-      contentWrapper.lensId = content.nftPost.lensId;
-      contentWrapper.isMirror = content.nftPost.isMirror;
-      contentWrapper.mirrorDescription = content.nftPost.mirrorDescription;
+      if (content.type === PostTypeEnum.NFT_TRANSFER) {
+        contentWrapper.blockchainType = content.nftPost.metadata.blockchainType;
+        contentWrapper.transferType = content.owner.walletAddress === content.nftPost.fromAddress ? TransferTypes.SEND : TransferTypes.RECEIVE;
+        contentWrapper.fromAddress = content.nftPost.fromAddress;
+        contentWrapper.toAddress = content.nftPost.toAddress;
+        contentWrapper.contractAddress = content.nftPost.scAddress;
+        contentWrapper.tokenId = content.nftPost.tokenId;
+        contentWrapper.tokenUri = content.nftPost.metadata.metadataUri;
+        contentWrapper.transactionHash = content.nftPost.txHash;
+        contentWrapper.image = content.nftPost.metadata.image;
+        contentWrapper.lensId = content.nftPost.lensId;
+        contentWrapper.isMirror = content.nftPost.isMirror;
+        contentWrapper.mirrorDescription = content.nftPost.mirrorDescription;
+      } else {
+        contentWrapper.image = content.zeroExPost.image;
+        contentWrapper.fromAddress = content.owner.walletAddress;
+        contentWrapper.sellPrice = Number(content.zeroExPost.price);
+        contentWrapper.collectionName = content.zeroExPost.collectionName;
+        contentWrapper.signedObject = content.zeroExPost.signedObject;
+      }
 
       result.push(contentWrapper);
     }

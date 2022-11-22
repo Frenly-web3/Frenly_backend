@@ -37,6 +37,7 @@ import { FeedService } from './services/feed.service';
 import { AdminService } from './services/admin.service';
 import { UserService } from './services/user.service';
 import { ENSService } from './services/ens.service';
+import { ZeroExService } from './services/zeroex.service';
 
 import { UserRepository } from './repository/user.repository';
 import { ProcessedBlocksRepository } from './repository/processed-blocks.repository';
@@ -45,6 +46,7 @@ import { PostRepository } from './repository/post.repository';
 import { NftTokenPostRepository } from './repository/nft-token-post.repository';
 import { SubscriptionRepository } from './repository/subscriptions.repository';
 import { NftMetadataRepository } from './repository/nft-metadata.repository';
+import { ZeroExRepository } from './repository/zeroex.repository';
 
 import { BlockSubscriberController } from './controller/block-subscriber.controller';
 import { AuthenticationController } from './controller/authentication.controller';
@@ -52,6 +54,7 @@ import { FeedController } from './controller/feed.controller';
 import { AdminController } from './controller/admin.controller';
 import { UserController } from './controller/user.controller';
 import { ENSController } from './controller/ens.controller';
+import { ZeroExController } from './controller/zeroex.controller';
 
 @Module({
   imports: [
@@ -90,6 +93,7 @@ import { ENSController } from './controller/ens.controller';
     AdminController,
     UserController,
     ENSController,
+    ZeroExController,
   ],
   providers: [
     {
@@ -119,6 +123,7 @@ import { ENSController } from './controller/ens.controller';
     AdminService,
     UserService,
     ENSService,
+    ZeroExService,
 
     JwtStrategy,
 
@@ -133,6 +138,7 @@ import { ENSController } from './controller/ens.controller';
     NftTokenPostRepository,
     NftMetadataRepository,
     SubscriptionRepository,
+    ZeroExRepository,
   ],
 })
 export class AppModule implements NestModule {

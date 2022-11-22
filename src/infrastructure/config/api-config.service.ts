@@ -9,6 +9,7 @@ import { ProcessedBlocksEntity } from '../../data/entity/processed-blocks.entity
 import { RefreshTokenEntity } from '../../data/entity/refresh-token.entity';
 import { SubscriptionEntity } from '../../data/entity/subscription.entity';
 import { UserEntity } from '../../data/entity/user.entity';
+import { ZeroExEntity } from '../../data/entity/zeroex.entity';
 
 @Injectable()
 export class ApiConfigService {
@@ -40,6 +41,7 @@ export class ApiConfigService {
         UserEntity,
         ProcessedBlocksEntity,
         SubscriptionEntity,
+        ZeroExEntity,
       ],
       keepConnectionAlive: true,
       synchronize: false,

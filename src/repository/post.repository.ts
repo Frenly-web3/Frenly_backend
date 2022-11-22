@@ -4,13 +4,15 @@ import { DataSource, In, Not, Repository } from 'typeorm';
 
 import { UserRepository } from './user.repository';
 import { NftTokenPostRepository } from './nft-token-post.repository';
+import { ZeroExRepository } from './zeroex.repository';
 
 import { PostEntity } from '../data/entity/post.entity';
 
 import { PostStatusEnum } from '../infrastructure/config/enums/post-status.enum';
+import { UserRole } from '../infrastructure/config/enums/users-role.enum';
 
 import { NftPostDto } from '../dto/nft-posts/nft-post.dto';
-import { UserRole } from '../infrastructure/config/enums/users-role.enum';
+import { ZeroExPostDto } from '../dto/zeroex/zeroex-post.dto';
 
 @Injectable()
 export class PostRepository {
@@ -21,8 +23,8 @@ export class PostRepository {
     private readonly connection: DataSource,
 
     private readonly userRepository: UserRepository,
-
     private readonly nftTokenPostRepository: NftTokenPostRepository,
+    private readonly zeroExRepository: ZeroExRepository,
   ) {
     this.repository = connection.getRepository(PostEntity);
   }
@@ -39,7 +41,7 @@ export class PostRepository {
         createdAt: 'DESC',
       },
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
     });
   }
 
@@ -53,7 +55,7 @@ export class PostRepository {
         createdAt: 'DESC',
       },
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
     });
   }
 
@@ -70,7 +72,7 @@ export class PostRepository {
       take,
       skip,
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
     });
   }
 
@@ -88,7 +90,7 @@ export class PostRepository {
       take,
       skip,
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
     });
   }
 
@@ -106,7 +108,7 @@ export class PostRepository {
       take,
       skip,
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
     });
   }
 
@@ -124,7 +126,7 @@ export class PostRepository {
       take,
       skip,
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
     });
   }
 
@@ -137,7 +139,7 @@ export class PostRepository {
         status: PostStatusEnum.PENDING,
       },
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
     });
   }
 
@@ -155,7 +157,7 @@ export class PostRepository {
       take,
       skip,
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
     });
   }
 
@@ -177,7 +179,7 @@ export class PostRepository {
       take,
       skip,
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
     });
   }
 
@@ -198,7 +200,7 @@ export class PostRepository {
       take,
       skip,
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata'],
+      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
     });
   }
 
@@ -220,6 +222,22 @@ export class PostRepository {
 
       owner,
       nftPost,
+    });
+
+    return this.repository.save(entity);
+  }
+
+  public async createZeroExPost(userId: number, data: ZeroExPostDto): Promise<PostEntity> {
+    const owner = await this.userRepository.getOneById(userId);
+    const zeroExPost = await this.zeroExRepository.create(data);
+
+    const entity = this.repository.create({
+      status: PostStatusEnum.PUBLISHED,
+
+      type: data.type,
+
+      owner,
+      zeroExPost,
     });
 
     return this.repository.save(entity);
