@@ -9,7 +9,7 @@ module.exports = class migrations1669098781262 {
                 "id" SERIAL NOT NULL,
                 "image" character varying,
                 "wallet_address" character varying NOT NULL,
-                "price" numeric(4, 8) NOT NULL,
+                "price" numeric(10, 8) NOT NULL,
                 "collection_name" character varying NOT NULL,
                 "signed_object" character varying NOT NULL,
                 "creation_date" TIMESTAMP NOT NULL DEFAULT now(),

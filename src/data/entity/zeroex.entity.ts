@@ -15,7 +15,7 @@ export class ZeroExEntity {
   @Column({ name: 'wallet_address' })
     walletAddress: string;
 
-  @Column({ type: 'decimal', precision: 4, scale: 8 })
+  @Column({ type: 'decimal', precision: 10, scale: 8 })
     price: number;
 
   @Column({ name: 'collection_name' })
