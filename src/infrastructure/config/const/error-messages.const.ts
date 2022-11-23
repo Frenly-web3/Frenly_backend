@@ -13,6 +13,8 @@ export class ErrorMessages {
 
   public static readonly CONTENT_NOT_FOUND = 'Content not found';
 
+  public static readonly CONTENT_NOT_OWNED = 'Content not owned';
+
   public static readonly INVALID_PROVIDER = 'Invalid blockchain provider';
 
   public static readonly PROVIDER_ALREADY_EXISTS = 'This provider already exists';

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { CurrentUserService } from './current-user.service';
 
@@ -7,7 +7,10 @@ import { UserRepository } from '../repository/user.repository';
 
 import { PostTypeEnum } from '../infrastructure/config/enums/post-type.enum';
 
+import { ErrorMessages } from '../infrastructure/config/const/error-messages.const';
+
 import { SellOrderDto } from '../dto/zeroex/sell-order.dto';
+import { PostStatusEnum } from '../infrastructure/config/enums/post-status.enum';
 
 @Injectable()
 export class ZeroExService {
@@ -28,5 +31,68 @@ export class ZeroExService {
     });
 
     return post.id;
+  }
+
+  async acceptSellRequest(id: number, buyerAddress: string): Promise<void> {
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const seller = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
+
+    const post = await this.postRepository.getPostById(id);
+
+    if (post == null || post.type !== PostTypeEnum.SELL_ORDER || post.status !== PostStatusEnum.PUBLISHED) {
+      throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
+    }
+
+    if (post.owner.walletAddress !== seller.walletAddress) {
+      throw new ForbiddenException(ErrorMessages.CONTENT_NOT_OWNED);
+    }
+
+    post.status = PostStatusEnum.UNPUBLISHED;
+    await this.postRepository.save(post);
+
+    let buyer = await this.userRepository.getOneByWalletAddress(buyerAddress.toLowerCase());
+
+    if (buyer == null) {
+      buyer = await this.userRepository.create({
+        nonce: 100000,
+        walletAddress: buyerAddress.toLowerCase(),
+      });
+    }
+
+    await this.postRepository.createZeroExPost(seller.id, {
+      image: post.zeroExPost.image,
+      walletAddress: seller.walletAddress,
+      price: post.zeroExPost.price,
+      collectionName: post.zeroExPost.collectionName,
+      signedObject: '',
+      type: PostTypeEnum.SELL_EVENT,
+    });
+
+    await this.postRepository.createZeroExPost(buyer.id, {
+      image: post.zeroExPost.image,
+      walletAddress: buyer.walletAddress,
+      price: post.zeroExPost.price,
+      collectionName: post.zeroExPost.collectionName,
+      signedObject: '',
+      type: PostTypeEnum.BUY_EVENT,
+    });
+  }
+
+  async declineSellRequest(id: number): Promise<void> {
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const seller = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
+
+    const post = await this.postRepository.getPostById(id);
+
+    if (post == null || post.type !== PostTypeEnum.SELL_ORDER || post.status !== PostStatusEnum.PUBLISHED) {
+      throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
+    }
+
+    if (post.owner.walletAddress !== seller.walletAddress) {
+      throw new ForbiddenException(ErrorMessages.CONTENT_NOT_OWNED);
+    }
+
+    post.status = PostStatusEnum.UNPUBLISHED;
+    await this.postRepository.save(post);
   }
 }
