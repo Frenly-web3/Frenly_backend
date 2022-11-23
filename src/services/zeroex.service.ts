@@ -50,7 +50,7 @@ export class ZeroExService {
 
     await this.postRepository.createZeroExPost(seller.id, {
       image: post.zeroExPost.image,
-      walletAddress: seller.walletAddress,
+      walletAddress: buyer.walletAddress,
       price: post.zeroExPost.price,
       collectionName: post.zeroExPost.collectionName,
       signedObject: '',
@@ -59,7 +59,7 @@ export class ZeroExService {
 
     await this.postRepository.createZeroExPost(buyer.id, {
       image: post.zeroExPost.image,
-      walletAddress: buyer.walletAddress,
+      walletAddress: seller.walletAddress,
       price: post.zeroExPost.price,
       collectionName: post.zeroExPost.collectionName,
       signedObject: '',

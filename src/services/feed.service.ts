@@ -349,9 +349,29 @@ export class FeedService {
         contentWrapper.lensId = content.nftPost.lensId;
         contentWrapper.isMirror = content.nftPost.isMirror;
         contentWrapper.mirrorDescription = content.nftPost.mirrorDescription;
-      } else {
+      }
+
+      if (content.type === PostTypeEnum.SELL_ORDER) {
         contentWrapper.image = content.zeroExPost.image;
         contentWrapper.fromAddress = content.owner.walletAddress;
+        contentWrapper.sellPrice = Number(content.zeroExPost.price);
+        contentWrapper.collectionName = content.zeroExPost.collectionName;
+        contentWrapper.signedObject = content.zeroExPost.signedObject;
+      }
+
+      if (content.type === PostTypeEnum.SELL_EVENT) {
+        contentWrapper.image = content.zeroExPost.image;
+        contentWrapper.fromAddress = content.owner.walletAddress;
+        contentWrapper.toAddress = content.zeroExPost.walletAddress;
+        contentWrapper.sellPrice = Number(content.zeroExPost.price);
+        contentWrapper.collectionName = content.zeroExPost.collectionName;
+        contentWrapper.signedObject = content.zeroExPost.signedObject;
+      }
+
+      if (content.type === PostTypeEnum.BUY_EVENT) {
+        contentWrapper.image = content.zeroExPost.image;
+        contentWrapper.fromAddress = content.zeroExPost.walletAddress;
+        contentWrapper.toAddress = content.owner.walletAddress;
         contentWrapper.sellPrice = Number(content.zeroExPost.price);
         contentWrapper.collectionName = content.zeroExPost.collectionName;
         contentWrapper.signedObject = content.zeroExPost.signedObject;
