@@ -33,9 +33,9 @@ export class ZeroExService {
     return post.id;
   }
 
-  async acceptSellRequest(id: number, buyerAddress: string): Promise<void> {
+  async acceptSellRequest(id: number): Promise<void> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-    const seller = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
+    const buyer = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
 
     const post = await this.postRepository.getPostById(id);
 
@@ -43,21 +43,10 @@ export class ZeroExService {
       throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
     }
 
-    if (post.owner.walletAddress !== seller.walletAddress) {
-      throw new ForbiddenException(ErrorMessages.CONTENT_NOT_OWNED);
-    }
-
     post.status = PostStatusEnum.UNPUBLISHED;
     await this.postRepository.save(post);
 
-    let buyer = await this.userRepository.getOneByWalletAddress(buyerAddress.toLowerCase());
-
-    if (buyer == null) {
-      buyer = await this.userRepository.create({
-        nonce: 100000,
-        walletAddress: buyerAddress.toLowerCase(),
-      });
-    }
+    const seller = await this.userRepository.getOneByWalletAddress(post.owner.walletAddress.toLowerCase());
 
     await this.postRepository.createZeroExPost(seller.id, {
       image: post.zeroExPost.image,

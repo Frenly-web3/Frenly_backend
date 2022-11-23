@@ -20,10 +20,10 @@ export class ZeroExController {
     return this.zeroExService.publishSellRequest({ ...dto });
   }
 
-  @Post('accept/:id/:walletAddress')
+  @Post('accept/:id')
   @UseGuards(AuthGuard())
-  async acceptSellRequest(@Param() { id, walletAddress }: AcceptSellRequestDto): Promise<void> {
-    return this.zeroExService.acceptSellRequest(id, walletAddress);
+  async acceptSellRequest(@Param() { id }: AcceptSellRequestDto): Promise<void> {
+    return this.zeroExService.acceptSellRequest(id);
   }
 
   @Delete('decline/:id')
