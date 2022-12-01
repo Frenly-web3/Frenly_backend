@@ -12,6 +12,8 @@ export class NftPostLookupDto {
 
   signedObject: string;
 
+  postOwner?: string;
+
   fromAddress: string;
 
   toAddress: string;

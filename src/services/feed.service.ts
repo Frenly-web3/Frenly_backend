@@ -338,6 +338,7 @@ export class FeedService {
 
       if (content.type === PostTypeEnum.NFT_TRANSFER) {
         contentWrapper.blockchainType = content.nftPost.metadata.blockchainType;
+        contentWrapper.postOwner = content.owner.walletAddress;
         contentWrapper.transferType = content.owner.walletAddress === content.nftPost.fromAddress ? TransferTypes.SEND : TransferTypes.RECEIVE;
         contentWrapper.fromAddress = content.nftPost.fromAddress;
         contentWrapper.toAddress = content.nftPost.toAddress;
