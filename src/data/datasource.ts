@@ -9,6 +9,7 @@ import { RefreshTokenEntity } from './entity/refresh-token.entity';
 import { SubscriptionEntity } from './entity/subscription.entity';
 import { UserEntity } from './entity/user.entity';
 import { ZeroExEntity } from './entity/zeroex.entity';
+import { CommunityEntity } from './entity/community.entity';
 
 dotenv.config({ path: `.${process.env.NODE_ENV}.env` });
 
@@ -29,6 +30,7 @@ export const AppDataSource = new DataSource({
     ProcessedBlocksEntity,
     SubscriptionEntity,
     ZeroExEntity,
+    CommunityEntity,
   ],
   migrations: ['src/data/migrations/*.*'],
   synchronize: false,

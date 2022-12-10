@@ -1,4 +1,3 @@
-import { WalletAddressDto } from './../dto/user/wallet-address.dto';
 import {
   Body,
   Controller,
@@ -11,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { WalletAddressDto } from '../dto/user/wallet-address.dto';
 
 import { FeedService } from '../services/feed.service';
 
@@ -41,11 +41,20 @@ export class FeedController {
     return this.feedService.getFilteredFeed(take, skip);
   }
 
+  @Get('/community/:communityId')
+  // @UseGuards(AuthGuard())
+  public async getCommunityFeed(
+    @Query() { take, skip }: PagingData,
+      @Param('communityId') communityId: number,
+  ): Promise<NftPostLookupDto[]> {
+    return this.feedService.getCommunityFeed(take, skip, communityId);
+  }
+
   @Get('published/:walletAddress')
   @UseGuards(AuthGuard())
   public async getPublished(
     @Query() { take, skip }: PagingData,
-    @Param() { walletAddress }: WalletAddressDto,
+      @Param() { walletAddress }: WalletAddressDto,
   ): Promise<NftPostLookupDto[]> {
     return this.feedService.getPublishedContent(take, skip, walletAddress);
   }
@@ -86,7 +95,7 @@ export class FeedController {
   @UseGuards(AuthGuard())
   public async repostContent(
     @Param() { lensId, newLensId }: LensMirrorDto,
-    @Body() { description }: RepostDescriptionDto,
+      @Body() { description }: RepostDescriptionDto,
   ): Promise<void> {
     return this.feedService.repostContent(lensId, newLensId, description);
   }

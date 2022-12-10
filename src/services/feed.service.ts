@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { v4 } from 'uuid';
+import { CommunityRepository } from '../repository/community.repository';
 
 import { CurrentUserService } from './current-user.service';
 import { IPFSService } from './ipfs.service';
@@ -37,6 +38,7 @@ export class FeedService {
     private readonly currentUserService: CurrentUserService,
     private readonly ipfsService: IPFSService,
 
+    private readonly communityRepository: CommunityRepository,
     private readonly userRepository: UserRepository,
     private readonly postRepository: PostRepository,
     private readonly subscriptionRepository: SubscriptionRepository,
@@ -62,8 +64,7 @@ export class FeedService {
 
     // GET SUBSCRIPTION & OWN POSTS
 
-    const subscriptions =
-      await this.subscriptionRepository.getUserRespondentsById(user.id);
+    const subscriptions = await this.subscriptionRepository.getUserRespondentsById(user.id);
     const subscriptionsIds = subscriptions.map((e) => e.id);
     subscriptionsIds.push(user.id);
 
@@ -93,6 +94,26 @@ export class FeedService {
       .slice(0, take);
 
     return this.mapUserContent(result);
+  }
+
+  public async getCommunityFeed(
+    take: number,
+    skip: number,
+    communityId: number,
+  ): Promise<NftPostLookupDto[]> {
+    const community = await this.communityRepository.getOneById(communityId);
+
+    if (!community) {
+      throw new NotFoundException('Community is not found');
+    }
+
+    const communityMemberIds: number[] = community.members.map((member) => member.id);
+
+    const communityPosts = await this.postRepository.getCommunityFeed(community, communityMemberIds, take, skip);
+
+    // RESULTS
+
+    return this.mapUserContent(communityPosts);
   }
 
   public async getUnpublishedContent(
@@ -416,10 +437,9 @@ export class FeedService {
 
       if (content.type === PostTypeEnum.NFT_TRANSFER) {
         contentWrapper.blockchainType = content.nftPost.metadata.blockchainType;
-        contentWrapper.transferType =
-          content.owner.walletAddress === content.nftPost.fromAddress
-            ? TransferTypes.SEND
-            : TransferTypes.RECEIVE;
+        contentWrapper.transferType = content.owner.walletAddress === content.nftPost.fromAddress
+          ? TransferTypes.SEND
+          : TransferTypes.RECEIVE;
         contentWrapper.fromAddress = content.nftPost.fromAddress;
         contentWrapper.toAddress = content.nftPost.toAddress;
         contentWrapper.contractAddress = content.nftPost.scAddress;

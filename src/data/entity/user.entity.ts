@@ -1,6 +1,7 @@
 import { AutoMap } from '@automapper/classes';
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { UserRole } from '../../infrastructure/config/enums/users-role.enum';
+import { CommunityEntity } from './community.entity';
 
 import { PostEntity } from './post.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
@@ -46,4 +47,11 @@ export class UserEntity {
 
   @OneToMany(() => PostEntity, (post) => post.owner)
     posts: PostEntity[];
+
+  @OneToMany(() => CommunityEntity, (community) => community.creator)
+    createdCommunities: CommunityEntity[];
+
+  @ManyToMany(() => CommunityEntity, (community) => community.members)
+    // @JoinTable()
+    communitiesMember: CommunityEntity[];
 }
