@@ -1,57 +1,57 @@
 import { AutoMap } from '@automapper/classes';
-import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Collection, Entity, Enum, ManyToMany, OneToMany, PrimaryKey, Property } from '@mikro-orm/core';
+import { UserRepository } from '../../repository/user.repository';
 import { UserRole } from '../../infrastructure/config/enums/users-role.enum';
 import { CommunityEntity } from './community.entity';
 
 import { PostEntity } from './post.entity';
 import { RefreshTokenEntity } from './refresh-token.entity';
 
-@Entity('users')
+@Entity({ tableName: 'users', customRepository: () => UserRepository })
 export class UserEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryKey()
   @AutoMap()
-    id: number;
+    id!: number;
 
-  @Column({ nullable: true })
+  @Property({ nullable: true })
     nonce: number;
 
-  @Column({ nullable: true })
+  @Property({ nullable: true })
     avatar: string;
 
-  @Column({ nullable: true })
+  @Property({ nullable: true })
     username: string;
 
-  @Column({ nullable: true })
+  @Property({ nullable: true })
     description: string;
 
-  @Column({ name: 'wallet_address' })
+  @Property({ name: 'wallet_address' })
   @AutoMap()
     walletAddress: string;
 
-  @Column({ name: 'has_lens_profile', default: false })
+  @Property({ name: 'has_lens_profile', default: false })
     hasLensProfile: boolean;
 
-  @Column({ enum: UserRole, default: UserRole.BASIC_USER })
+  @Enum({ type: () => UserRole, default: UserRole.BASIC_USER })
     role: UserRole;
 
-  @CreateDateColumn({ name: 'creation_date' })
-    creationDate: Date;
+  @Property({ name: 'creation_date' })
+    creationDate = new Date();
 
-  @UpdateDateColumn({ name: 'update_date' })
-    updateDate: Date;
+  @Property({ name: 'update_date', onUpdate: () => new Date() })
+    updateDate = new Date();
 
   // Relations
 
   @OneToMany(() => RefreshTokenEntity, (token) => token.user)
-    refreshTokens: RefreshTokenEntity[];
+    refreshTokens = new Collection<RefreshTokenEntity>(this);
 
   @OneToMany(() => PostEntity, (post) => post.owner)
-    posts: PostEntity[];
+    posts = new Collection<PostEntity>(this);
 
   @OneToMany(() => CommunityEntity, (community) => community.creator)
-    createdCommunities: CommunityEntity[];
+    createdCommunities = new Collection<CommunityEntity>(this);
 
-  @ManyToMany(() => CommunityEntity, (community) => community.members)
-    // @JoinTable()
-    communitiesMember: CommunityEntity[];
+  @ManyToMany(() => CommunityEntity, (community) => community.members, { owner: true })
+    communitiesMember = new Collection<CommunityEntity>(this);
 }

@@ -44,12 +44,12 @@ export class AdminController {
     return this.adminService.publishAdminsPost(contentId);
   }
 
-  @Put('/bind/:contentId/:lensId')
-  @Roles(UserRole.ADMIN)
-  @UseGuards(AuthGuard(), RolesGuard)
-  public async bindContentWithLens(@Param() { contentId, lensId }: ContentWithLensIdsDto): Promise<void> {
-    return this.adminService.bindContentWithLensId(contentId, lensId);
-  }
+  // @Put('/bind/:contentId/:lensId')
+  // @Roles(UserRole.ADMIN)
+  // @UseGuards(AuthGuard(), RolesGuard)
+  // public async bindContentWithLens(@Param() { contentId, lensId }: ContentWithLensIdsDto): Promise<void> {
+  //   return this.adminService.bindContentWithLensId(contentId, lensId);
+  // }
 
   @Delete('content/:contentId')
   @Roles(UserRole.ADMIN)

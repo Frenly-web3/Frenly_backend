@@ -1,29 +1,30 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, ManyToOne, Unique, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, ManyToMany, ManyToOne, PrimaryKey, Property, Collection, EntityRepositoryType } from '@mikro-orm/core';
+import { CommunityRepository } from '../../repository/community.repository';
 import { UserEntity } from './user.entity';
 
-@Entity('community')
-@Unique(['contractAddress'])
+@Entity({ tableName: 'community', customRepository: () => CommunityRepository })
 export class CommunityEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryKey()
     id: number;
 
-  @Column({ name: 'name' })
+  @Property({ name: 'name' })
     name: string;
 
-  @Column({ name: 'contract_address' })
+  @Property({ name: 'contract_address', unique: true })
     contractAddress: string;
 
   // relations
-  @ManyToOne(() => UserEntity, (user) => user.createdCommunities)
+  @ManyToOne(() => UserEntity)
     creator: UserEntity;
 
-  @ManyToMany(() => UserEntity)
-  @JoinTable()
-    members: UserEntity[];
+  @ManyToMany(() => UserEntity, (user: UserEntity) => user.communitiesMember, { nullable: true })
+    members = new Collection<UserEntity>(this);
 
-  @CreateDateColumn({ name: 'creation_date' })
-    creationDate: Date;
+  @Property({ name: 'creation_date' })
+    creationDate = new Date();
 
-  @UpdateDateColumn({ name: 'update_date' })
-    updateDate: Date;
+  @Property({ name: 'update_date', onUpdate: () => new Date() })
+    updateDate = new Date();
+
+    [EntityRepositoryType]?: CommunityRepository;
 }

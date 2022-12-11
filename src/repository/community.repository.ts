@@ -1,24 +1,15 @@
 import { BadRequestException } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { CommunityDto } from '../dto/community/community.dto';
+import { EntityRepository } from '@mikro-orm/postgresql';
 import { CommunityEntity } from '../data/entity/community.entity';
 
-export class CommunityRepository {
-  private readonly repository: Repository<CommunityEntity>;
 
-  constructor(
-    @InjectDataSource()
-    private readonly connection: DataSource,
-  ) {
-    this.repository = connection.getRepository(CommunityEntity);
-  }
-
+export class CommunityRepository extends EntityRepository<CommunityEntity> {
+  
   public async getAll(take?: number, skip?: number): Promise<CommunityEntity[]> {
     try {
-      return await this.repository.find({
-        take,
-        skip,
+      return await this.findAll({
+        limit: take,
+        offset: skip,
       });
     } catch (error) {
       console.log(error);
@@ -28,7 +19,7 @@ export class CommunityRepository {
 
   public async getOneById(id: number): Promise<CommunityEntity> {
     try {
-      return await this.repository.findOne({ where: { id }, relations: ['members'] });
+      return await this.findOne({ id }, { populate: ['members'] });
     } catch (error) {
       console.log(error);
       throw new BadRequestException();
@@ -37,22 +28,23 @@ export class CommunityRepository {
 
   public async getOneByContractAddress(contractAddress: string): Promise<CommunityEntity> {
     try {
-      return await this.repository.findOne({ where: { contractAddress } });
+      return await this.findOne({ contractAddress });
     } catch (error) {
       console.log(error);
       throw new BadRequestException();
     }
   }
 
-  public async create(data: CommunityDto): Promise<CommunityEntity> {
-    const community = this.repository.create(data);
-    await this.repository.save(community);
-    return community;
-  }
+  // public async create(data: CommunityDto): Promise<CommunityEntity> {
+  //   const community = await this.create(data);
+  //   await this.save(community);
+  //   return community;
+  // }
 
   public async save(entity: CommunityEntity): Promise<CommunityEntity> {
     try {
-      return await this.repository.save(entity);
+      await this.persistAndFlush(entity);
+      return entity;
     } catch (error) {
       console.log(error);
       throw new BadRequestException('Something');

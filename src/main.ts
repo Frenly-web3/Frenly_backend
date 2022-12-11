@@ -1,17 +1,19 @@
 import { NestFactory } from '@nestjs/core';
-import { DataSource } from 'typeorm';
 
 import { use } from '@maticnetwork/maticjs';
 import { Web3ClientPlugin } from '@maticnetwork/maticjs-web3';
 
 import fs from 'fs';
 
+import { MikroORM, PostgreSqlDriver } from '@mikro-orm/postgresql';
+import { RequestContext } from '@mikro-orm/core';
 import { BlockchainTypeEnum } from './infrastructure/config/enums/blockchain-type.enum';
 import { BlockchainConfigStorage } from './services/utils/blockchain-config.storage';
 
 import { AppModule } from './app.module';
 import { ApiConfigService } from './infrastructure/config/api-config.service';
 import { BlockSubscriberService } from './services/block-subscriber.service';
+import dbConfig from './data/datasource';
 
 async function bootstrap() {
   await use(Web3ClientPlugin);
@@ -30,8 +32,26 @@ async function bootstrap() {
   }
 
   try {
-    const typeORMconnection = app.get(DataSource);
-    await typeORMconnection.runMigrations();
+    const orm = await MikroORM.init<PostgreSqlDriver>(dbConfig);
+    await orm.getMigrator().up();
+
+    // if we don't need to delete database
+    const generator = orm.getSchemaGenerator();
+
+    // if we need to delete the database
+    // await generator.refreshDatabase();
+
+    await generator.updateSchema(); // make migration
+
+    // const seeder = orm.getSeeder();
+    // eslint-disable-next-line max-len
+    // await seeder.seed(DatabaseSeeder); // add to DB default admin, unlimited and standart(user can take 5 books at one time) abonements and 3 defaults authors
+    app.use((req, res, next) => {
+      RequestContext.createAsync(orm.em, next);
+    });
+    await orm.close();
+    // const typeORMconnection = app.get(DataSource);
+    // await typeORMconnection.runMigrations();
   } catch (e) {
     process.exit(e);
   }

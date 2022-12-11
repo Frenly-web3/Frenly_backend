@@ -29,8 +29,8 @@ export class CommunityController {
   }
 
   @Post('create')
-  @Roles(UserRole.ADMIN)
-  @UseGuards(AuthGuard(), RolesGuard)
+  // @Roles(UserRole.ADMIN)
+  // @UseGuards(AuthGuard(), RolesGuard)
   public async create(
     @Body() createCommunityDto: CreateCommunityDto,
   ): Promise<void> {

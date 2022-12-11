@@ -1,28 +1,27 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
-
+import { Entity, Enum, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { NftMetadataRepository } from '../../repository/nft-metadata.repository';
 import { BlockchainTypeEnum } from '../../infrastructure/config/enums/blockchain-type.enum';
 import { ERCTokenEnum } from '../../infrastructure/config/enums/erc-tokens.enum';
 
 import { NftTokenPostEntity } from './nft-token-post.entity';
 
-@Entity('nft_metadata')
+@Entity({ tableName: 'nft_metadata', customRepository: () => NftMetadataRepository })
 export class NftMetadataEntity {
-  @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryKey()
+    id!: number;
 
-  @OneToOne(() => NftTokenPostEntity, (post) => post.metadata, { orphanedRowAction: 'delete' })
-  @JoinColumn({ name: 'transfer_id' })
+  @OneToOne(() => NftTokenPostEntity, (post) => post.metadata, { orphanRemoval: true, name: 'transfer_id' })
     nftPost: NftTokenPostEntity;
 
-  @Column({ name: 'metadata_uri', nullable: true })
+  @Property({ name: 'metadata_uri', nullable: true })
     metadataUri: string;
 
-  @Column({ name: 'image', nullable: true })
+  @Property({ name: 'image', nullable: true })
     image: string;
 
-  @Column({ name: 'blockchain_type', enum: BlockchainTypeEnum })
+  @Enum({ name: 'blockchain_type', items: () => BlockchainTypeEnum })
     blockchainType: BlockchainTypeEnum;
 
-  @Column({ name: 'token_type', enum: ERCTokenEnum })
+  @Enum({ name: 'token_type', items: () => ERCTokenEnum })
     tokenType: ERCTokenEnum;
 }

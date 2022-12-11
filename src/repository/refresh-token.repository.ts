@@ -1,43 +1,32 @@
-import { Injectable } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+// import { Injectable } from '@nestjs/common';
 
-import { UserRepository } from './user.repository';
+// import { UserRepository } from './user.repository';
 
-import { RefreshTokenEntity } from '../data/entity/refresh-token.entity';
+// import { RefreshTokenEntity } from '../data/entity/refresh-token.entity';
 
-import { RefreshTokenDto } from '../dto/jwt/refresh-token.dto';
+// import { RefreshTokenDto } from '../dto/jwt/refresh-token.dto';
+// import { EntityRepository } from '@mikro-orm/postgresql';
 
-@Injectable()
-export class RefreshTokenRepository {
-  private readonly repository: Repository<RefreshTokenEntity>;
+// @Injectable()
+// export class RefreshTokenRepository extends EntityRepository<RefreshTokenEntity> {
 
-  constructor(
-    @InjectDataSource()
-    private readonly connection: DataSource,
+//   public async getOneById(tokenId: string): Promise<RefreshTokenEntity> {
+//     return this.findOne({ tokenId });
+//   }
 
-    private readonly userRepository: UserRepository,
-  ) {
-    this.repository = connection.getRepository(RefreshTokenEntity);
-  }
+//   public async create(userId: string, data: RefreshTokenDto): Promise<RefreshTokenEntity> {
+//     const user = await this.getOneById(userId);
 
-  public async getOneById(tokenId: string): Promise<RefreshTokenEntity> {
-    return this.repository.findOne({ where: { tokenId } });
-  }
+//     const refreshToken = await this.create({
+//       ...data,
+//       user,
+//     });
+//     await this.save(refreshToken);
 
-  public async create(userId: number, data: RefreshTokenDto): Promise<RefreshTokenEntity> {
-    const user = await this.userRepository.getOneById(userId);
+//     return refreshToken;
+//   }
 
-    const refreshToken = this.repository.create({
-      ...data,
-      user,
-    });
-    await this.repository.save(refreshToken);
-
-    return refreshToken;
-  }
-
-  public async save(refreshToken: RefreshTokenEntity): Promise<RefreshTokenEntity> {
-    return this.repository.save(refreshToken);
-  }
-}
+//   public async save(refreshToken: RefreshTokenEntity): Promise<RefreshTokenEntity> {
+//     return this.save(refreshToken);
+//   }
+// }

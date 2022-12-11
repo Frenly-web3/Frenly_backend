@@ -6,8 +6,6 @@ import { classes } from '@automapper/classes';
 
 import { ScheduleModule } from '@nestjs/schedule';
 
-import { TypeOrmModule } from '@nestjs/typeorm';
-
 import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { join } from 'path';
@@ -15,6 +13,8 @@ import * as httpContext from 'express-http-context';
 
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { MikroOrmMiddleware, MikroOrmModule } from '@mikro-orm/nestjs';
+import { MikroORM } from '@mikro-orm/core';
 import { CommunityRepository } from './repository/community.repository';
 import { JwtStrategy } from './infrastructure/middlewares/strategies/jwt.strategy';
 
@@ -38,16 +38,14 @@ import { FeedService } from './services/feed.service';
 import { AdminService } from './services/admin.service';
 import { UserService } from './services/user.service';
 import { ENSService } from './services/ens.service';
-import { ZeroExService } from './services/zeroex.service';
 
 import { UserRepository } from './repository/user.repository';
 import { ProcessedBlocksRepository } from './repository/processed-blocks.repository';
-import { RefreshTokenRepository } from './repository/refresh-token.repository';
+// import { RefreshTokenRepository } from './repository/refresh-token.repository';
 import { PostRepository } from './repository/post.repository';
 import { NftTokenPostRepository } from './repository/nft-token-post.repository';
 import { SubscriptionRepository } from './repository/subscriptions.repository';
 import { NftMetadataRepository } from './repository/nft-metadata.repository';
-import { ZeroExRepository } from './repository/zeroex.repository';
 
 import { BlockSubscriberController } from './controller/block-subscriber.controller';
 import { AuthenticationController } from './controller/authentication.controller';
@@ -55,7 +53,6 @@ import { FeedController } from './controller/feed.controller';
 import { AdminController } from './controller/admin.controller';
 import { UserController } from './controller/user.controller';
 import { ENSController } from './controller/ens.controller';
-import { ZeroExController } from './controller/zeroex.controller';
 import { CommunityService } from './services/community.service';
 import { CommunityController } from './controller/community.controller';
 
@@ -66,10 +63,10 @@ import { CommunityController } from './controller/community.controller';
     PassportModule.register({
       defaultStrategy: 'jwt',
     }),
-    TypeOrmModule.forRootAsync({
+    MikroOrmModule.forRootAsync({
       imports: [ApiConfigModule],
-      useFactory: (configService: ApiConfigService) => configService.postgresConfig,
       inject: [ApiConfigService],
+      useFactory: async (configService: ApiConfigService) => configService.postgresConfig,
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', 'public'),
@@ -96,7 +93,6 @@ import { CommunityController } from './controller/community.controller';
     AdminController,
     UserController,
     ENSController,
-    ZeroExController,
     CommunityController,
   ],
   providers: [
@@ -117,6 +113,8 @@ import { CommunityController } from './controller/community.controller';
       useValue: new ApiResponseInterceptor(),
     },
 
+    // MikroORM,
+
     BlockSubscriberService,
     CronService,
     ApiJWTService,
@@ -127,7 +125,6 @@ import { CommunityController } from './controller/community.controller';
     AdminService,
     UserService,
     ENSService,
-    ZeroExService,
     CommunityService,
 
     JwtStrategy,
@@ -138,17 +135,18 @@ import { CommunityController } from './controller/community.controller';
 
     UserRepository,
     ProcessedBlocksRepository,
-    RefreshTokenRepository,
+    // RefreshTokenRepository,
     PostRepository,
     NftTokenPostRepository,
     NftMetadataRepository,
     SubscriptionRepository,
-    ZeroExRepository,
     CommunityRepository,
   ],
 })
 export class AppModule implements NestModule {
+  constructor(private readonly orm: MikroORM) {}
+
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(httpContext.middleware).forRoutes('*');
+    consumer.apply(httpContext.middleware, MikroOrmMiddleware).forRoutes('*');
   }
 }

@@ -1,12 +1,15 @@
 /* eslint-disable consistent-return */
 /* eslint-disable no-continue */
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 
 import moment from 'moment';
 import axios from 'axios';
 import fs from 'fs';
 import { v4 } from 'uuid';
 import path from 'path';
+import { NftMetadataEntity } from '../data/entity/nft-metadata.entity';
+import { PostEntity } from '../data/entity/post.entity';
+import { NftTokenPostEntity } from '../data/entity/nft-token-post.entity';
 
 import { UserRepository } from '../repository/user.repository';
 import { ProcessedBlocksRepository } from '../repository/processed-blocks.repository';
@@ -31,7 +34,6 @@ import { ITransactionReceipt } from './interfaces/transactions/transaction-recei
 import { ProcessedBlocksEntity } from '../data/entity/processed-blocks.entity';
 
 import { SubscriptionServiceStatus } from '../dto/subscription-service/subscription-service-status.dto';
-import { NftPostDto } from '../dto/nft-posts/nft-post.dto';
 
 @Injectable()
 export class BlockSubscriberService {
@@ -104,7 +106,7 @@ export class BlockSubscriberService {
 
       await this.matchAndSaveUsersTransfers(blockHeader, transfersData);
 
-      await this.processedBlockRepository.create(blockHeader.number, type, blockHeader.timestamp);
+      // await this.processedBlockRepository.create(blockHeader.number, type, blockHeader.timestamp);
 
       this.logger.log(`Processed ${blockHeader.number} block in ${BlockchainTypeEnum[type]} completely.`);
     } catch (error) {
@@ -123,46 +125,66 @@ export class BlockSubscriberService {
         || x.walletAddress.toLowerCase() === data.toAddress.toLowerCase(),
       );
 
+      let image = null;
+
+      try {
+        if (data.imageURI != null) {
+          image = `${data.tokenId}-${v4()}-${new Date().toISOString()}.png`;
+
+          await this.downloadFile(data.imageURI, `${FilePaths.TOKEN_IMAGES}/${image}`);
+        }
+      } catch (e) {
+        image = null;
+      }
+
+      // const content: NftPostDto = {
+      //   blockchainType: data.blockchainType,
+      //   transactionHash: data.transactionHash,
+      //   fromAddress: data.fromAddress,
+      //   toAddress: data.toAddress,
+      //   smartContractAddress: data.contractAddress,
+      //   tokenId: data.tokenId.toString(),
+      //   tokenType: data.type,
+      //   metadataUri: data.tokenURI,
+      //   blockNumber: blockHeader.number,
+      //   image,
+      // };
+
+      const creationDate = moment.unix(Number(blockHeader.timestamp)).toDate();
+      // const updateDate = moment.unix(Number(blockHeader.timestamp)).toDate();
+
+      // const postStatus = PostStatusEnum.PUBLISHED;
+
       for (const member of transactionMembers) {
-        let image = null;
+        const owner = await this.userRepository.getOneById(member.id);
 
-        try {
-          if (data.imageURI != null) {
-            image = `${data.tokenId}-${v4()}-${new Date().toISOString()}.png`;
-
-            await this.downloadFile(data.imageURI, `${FilePaths.TOKEN_IMAGES}/${image}`);
-          }
-        } catch (e) {
-          image = null;
+        if (!owner) {
+          throw new NotFoundException();
         }
 
-        const content: NftPostDto = {
-          blockchainType: data.blockchainType,
-          transactionHash: data.transactionHash,
-          fromAddress: data.fromAddress,
-          toAddress: data.toAddress,
-          smartContractAddress: data.contractAddress,
-          tokenId: data.tokenId.toString(),
-          tokenType: data.type,
-          metadataUri: data.tokenURI,
-          blockNumber: blockHeader.number,
-          image,
-        };
+        const nftMetadata = new NftMetadataEntity();
+        const nftPost = new NftTokenPostEntity();
 
-        const creationDate = moment.unix(Number(blockHeader.timestamp)).toDate();
-        const updateDate = moment.unix(Number(blockHeader.timestamp)).toDate();
+        nftMetadata.blockchainType = data.blockchainType;
+        nftMetadata.tokenType = data.type;
+        nftMetadata.metadataUri = data.tokenURI;
+        nftMetadata.image = image;
 
-        const postStatus = PostStatusEnum.PUBLISHED;
+        nftPost.txHash = data.transactionHash;
+        nftPost.fromAddress = data.fromAddress;
+        nftPost.toAddress = data.toAddress;
+        nftPost.scAddress = data.contractAddress;
+        nftPost.tokenId = data.tokenId.toString();
+        nftPost.blockNumber = blockHeader.number;
+        nftPost.metadata = nftMetadata;
 
-        await this.postRepository.createNftTokenPost(
-          member.id,
-          content,
+        const post = new PostEntity();
+        post.nftPost = nftPost;
+        post.owner = member;
+        post.status = PostStatusEnum.PUBLISHED;
+        post.createdAt = creationDate;
 
-          postStatus,
-
-          creationDate,
-          updateDate,
-        );
+        await this.postRepository.createNftTokenPost(post);
 
         this.logger.log(`
           Found and added user: (${member.walletAddress}),

@@ -1,34 +1,30 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  ManyToOne,
-  PrimaryColumn,
-} from 'typeorm';
+import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+// import { RefreshTokenRepository } from '../../repository/refresh-token.repository';
 import { UserEntity } from './user.entity';
 
-@Entity('refresh_tokens')
+// customRepository: () => RefreshTokenRepository
+@Entity({ tableName: 'refresh_tokens',  })
 export class RefreshTokenEntity {
-  @PrimaryColumn({ name: 'token_id', unique: true })
+  @PrimaryKey({ name: 'token_id', unique: true, autoincrement: false })
     tokenId: string;
 
-  @Column({ name: 'jwt_id' })
+  @Property({ name: 'jwt_id' })
     jwtId: string;
 
-  @CreateDateColumn({ name: 'creation_date' })
-    creationDate: Date;
+  @Property({ name: 'creation_date' })
+    creationDate = new Date();
 
-  @Column({ name: 'expiry_date' })
+  @Property({ name: 'expiry_date' })
     expiryDate: Date;
 
-  @Column({ name: 'is_used', default: false })
+  @Property({ name: 'is_used', default: false })
     isUsed: boolean;
 
-  @Column({ name: 'is_invalidated', default: false })
+  @Property({ name: 'is_invalidated', default: false })
     isInvalidated: boolean;
 
   // Relations
 
-  @ManyToOne(() => UserEntity, (user) => user.refreshTokens)
+  @ManyToOne(() => UserEntity)
     user: UserEntity;
 }

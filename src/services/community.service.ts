@@ -3,11 +3,11 @@ import axios from 'axios';
 import { UserEntity } from 'src/data/entity/user.entity';
 import { CommunitiesLookUpDto } from 'src/dto/community/communities-look-up.dto';
 import { UserRole } from 'src/infrastructure/config/enums/users-role.enum';
+// import { UseRequestContext } from '@mikro-orm/core';
+// import { MikroORM } from '@mikro-orm/core';
 import { CreateCommunityDto } from '../dto/community/create-community.dto';
-import { CommunityDto } from '../dto/community/community.dto';
 import { CommunityRepository } from '../repository/community.repository';
 import { CurrentUserService } from './current-user.service';
-import { UserDto } from '../dto/user/user.dto';
 import { CommunityEntity } from '../data/entity/community.entity';
 import { UserRepository } from '../repository/user.repository';
 import { AuthenticationService } from './authentication.service';
@@ -20,6 +20,7 @@ export class CommunityService {
     private readonly authService: AuthenticationService,
     private readonly currentUserService: CurrentUserService,
     private readonly communityRepository: CommunityRepository,
+    // private readonly orm: MikroORM,
   ) {}
 
   public async getAllCommunities(take: number, skip: number): Promise<CommunitiesLookUpDto[]> {
@@ -38,6 +39,7 @@ export class CommunityService {
     return this.mapCommunityData(communityFromDB);
   }
 
+  // @UseRequestContext()
   public async createCommunity(
     createCommunityDto: CreateCommunityDto,
   ): Promise<void> {
@@ -45,27 +47,33 @@ export class CommunityService {
     // const contractAddress = '0xe785E82358879F061BC3dcAC6f0444462D4b5330';
     const { contractAddress, name } = createCommunityDto;
 
+    console.log('хотя бы тут');
+
     const communityFromDB = await this.communityRepository.getOneByContractAddress(contractAddress);
+
+    console.log('tut?');
 
     if (communityFromDB) {
       throw new BadRequestException('Community with this address already exists');
     }
-    const payload = this.currentUserService.getCurrentUserInfo();
-    const currentUserWalletAddress = payload.walletAddress;
-    // const currentUserWalletAddress = '0xe213719356a12cb5610e70660e8f82fce8199fc0';
+    // const payload = this.currentUserService.getCurrentUserInfo();
+    // const currentUserWalletAddress = payload.walletAddress;
+    const currentUserWalletAddress = '0xe213719356a12cb5610e70660e8f82fce8199fc0';
     const currentUser = await this.userRepository.getOneByWalletAddress(currentUserWalletAddress);
 
     if (!currentUser || currentUser.role === UserRole.BASIC_USER) {
       throw new UnauthorizedException();
     }
 
-    const newCommunity: CommunityDto = {
-      name,
-      contractAddress: contractAddress.toLowerCase(),
-      creator: currentUser,
-    };
+    // const newCommunity: CommunityDto = {
+    //   name,
+    //   contractAddress: contractAddress.toLowerCase(),
+    //   creator: currentUser,
+    // };
 
-    const community = await this.communityRepository.create(newCommunity);
+    const newCommunity = new CommunityEntity();
+    newCommunity.name = name;
+    newCommunity.contractAddress = contractAddress;
 
     const communityMembers = await this.getCommunityMembersFromSC(contractAddress);
 
@@ -73,7 +81,7 @@ export class CommunityService {
       return;
     }
 
-    await this.matchAndSaveCommunityMembers(communityMembers, community);
+    await this.matchAndSaveCommunityMembers(communityMembers, newCommunity);
   }
 
   // eslint-disable-next-line function-paren-newline
@@ -99,10 +107,9 @@ export class CommunityService {
     }
   }
 
+  // eslint-disable-next-line max-len
   // работает только для новых сообществ. с существующими может быть проблемы из-за того, что пользователь уже может быть в сообществе. поэтому надо будет переписать
   public async matchAndSaveCommunityMembers(communityMembers: string[], community: CommunityEntity): Promise<void> {
-    const newMembers: UserEntity[] = [];
-
     const uniqueCommunityMembers: string[] = [];
 
     for (const member of communityMembers) {
@@ -111,29 +118,30 @@ export class CommunityService {
       }
     }
     const allUsers = await this.userRepository.getAll();
+    try {
+      await community.members.init();
+    } catch (error) {
+      console.log(error);
+    }
     for (const member of uniqueCommunityMembers) {
       const user = allUsers.find((userFromDB) => userFromDB.walletAddress.toLowerCase() === member.toLowerCase());
 
-      if (user) {
+      if (user && !community.members.contains(user)) {
         // нужна ли проверка на то, что у пользователь уже является мембером этого комьюнити или нет, зависит от того,сразу ли запускается или нет
         // community.members.push(user); //not working
-        newMembers.push(user);
-      } else {
-        const userCreateData: UserDto = {
-          walletAddress: member.toLowerCase(),
-          nonce: this.authService.generateNonce(),
-
-        };
-        const newUser = await this.userRepository.create(userCreateData);
-        if (!newUser) {
-          throw new BadRequestException('sth went wr');
-        }
-        // community.members.push(newUser); //not working
-        newMembers.push(newUser);
+        community.members.add(user);
+      } else if (!user) {
+        const newUser = new UserEntity();
+        newUser.walletAddress = member.toLowerCase();
+        newUser.nonce = this.authService.generateNonce();
+        community.members.add(newUser);
+      } else if (user && community.members.contains(user)) {
+        // eslint-disable-next-line no-continue
+        continue;
       }
     }
 
-    community.members = [...newMembers];
+    // community.members = [...newMembers];
     await this.communityRepository.save(community);
   }
 

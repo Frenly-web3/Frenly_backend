@@ -107,7 +107,13 @@ export class FeedService {
       throw new NotFoundException('Community is not found');
     }
 
-    const communityMemberIds: number[] = community.members.map((member) => member.id);
+    try {
+      await community.members.init();
+    } catch (error) {
+      console.log(error);
+    }
+
+    const communityMemberIds: number[] = community.members.getIdentifiers();
 
     const communityPosts = await this.postRepository.getCommunityFeed(community, communityMemberIds, take, skip);
 
@@ -143,8 +149,6 @@ export class FeedService {
     skip: number,
     walletAddress: string,
   ): Promise<NftPostLookupDto[]> {
-    // const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-    console.log('walletAddress', walletAddress);
     const currentUser = await this.userRepository.getOneByWalletAddress(
       walletAddress,
     );
@@ -199,56 +203,56 @@ export class FeedService {
     return link;
   }
 
-  public async publishContent(contentId: number): Promise<void> {
-    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-    const currentUser = await this.userRepository.getOneByWalletAddress(
-      walletAddress,
-    );
+  // public async publishContent(contentId: number): Promise<void> {
+  //   const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+  //   const currentUser = await this.userRepository.getOneByWalletAddress(
+  //     walletAddress,
+  //   );
 
-    if (currentUser == null) {
-      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
-    }
+  //   if (currentUser == null) {
+  //     throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+  //   }
 
-    if (!currentUser.hasLensProfile) {
-      throw new BadRequestException(ErrorMessages.NO_LENS_PROFILE);
-    }
+  //   if (!currentUser.hasLensProfile) {
+  //     throw new BadRequestException(ErrorMessages.NO_LENS_PROFILE);
+  //   }
 
-    const content = await this.postRepository.getDraftById(contentId);
+  //   const content = await this.postRepository.getDraftById(contentId);
 
-    if (content == null || content.owner.id !== currentUser.id) {
-      throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
-    }
+  //   if (content == null || content.owner.id !== currentUser.id) {
+  //     throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
+  //   }
 
-    content.status = PostStatusEnum.PUBLISHED;
-    await this.postRepository.save(content);
-  }
+  //   content.status = PostStatusEnum.PUBLISHED;
+  //   await this.postRepository.save(content);
+  // }
 
-  public async bindContentWithLensId(
-    contentId: number,
-    lensId: string,
-  ): Promise<void> {
-    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-    const currentUser = await this.userRepository.getOneByWalletAddress(
-      walletAddress,
-    );
+  // public async bindContentWithLensId(
+  //   contentId: number,
+  //   lensId: string,
+  // ): Promise<void> {
+  //   const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+  //   const currentUser = await this.userRepository.getOneByWalletAddress(
+  //     walletAddress,
+  //   );
 
-    if (currentUser == null) {
-      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
-    }
+  //   if (currentUser == null) {
+  //     throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+  //   }
 
-    if (!currentUser.hasLensProfile) {
-      throw new BadRequestException(ErrorMessages.NO_LENS_PROFILE);
-    }
+  //   if (!currentUser.hasLensProfile) {
+  //     throw new BadRequestException(ErrorMessages.NO_LENS_PROFILE);
+  //   }
 
-    const content = await this.postRepository.getPostById(contentId);
+  //   const content = await this.postRepository.getPostById(contentId);
 
-    if (content == null || content.owner.id !== currentUser.id) {
-      throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
-    }
+  //   if (content == null || content.owner.id !== currentUser.id) {
+  //     throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
+  //   }
 
-    content.nftPost.lensId = lensId;
-    await this.postRepository.save(content);
-  }
+  //   content.nftPost.lensId = lensId;
+  //   await this.postRepository.save(content);
+  // }
 
   public async repostContent(
     existsLensId: string,
@@ -288,17 +292,18 @@ export class FeedService {
       blockNumber: post.nftPost.blockNumber,
     };
 
-    const repost = await this.postRepository.createNftTokenPost(
-      id,
-      content,
-      PostStatusEnum.PUBLISHED,
-    );
+    // const repost = await this.postRepository.createNftTokenPost(
+    //   id,
+    //   content,
+    //   PostStatusEnum.PUBLISHED,
+    // );
 
-    repost.nftPost.isMirror = true;
-    repost.nftPost.lensId = newLensId;
-    repost.nftPost.mirrorDescription = description;
+    // repost.nftPost.isMirror = true;
+    // repost.nftPost.lensId = newLensId;
+    // repost.nftPost.mirrorDescription = description;
 
-    await this.postRepository.save(repost);
+    //add logic to save
+    // await this.postRepository.save(repost);
   }
 
   public async removeContent(contentId: number): Promise<void> {
@@ -318,7 +323,8 @@ export class FeedService {
     }
 
     content.status = PostStatusEnum.UNPUBLISHED;
-    await this.postRepository.save(content);
+    //add logic to save
+    // await this.postRepository.save(content);
   }
 
   // Mapping
@@ -453,29 +459,15 @@ export class FeedService {
       }
 
       if (content.type === PostTypeEnum.SELL_ORDER) {
-        contentWrapper.image = content.zeroExPost.image;
         contentWrapper.fromAddress = content.owner.walletAddress;
-        contentWrapper.sellPrice = Number(content.zeroExPost.price);
-        contentWrapper.collectionName = content.zeroExPost.collectionName;
-        contentWrapper.signedObject = content.zeroExPost.signedObject;
       }
 
       if (content.type === PostTypeEnum.SELL_EVENT) {
-        contentWrapper.image = content.zeroExPost.image;
         contentWrapper.fromAddress = content.owner.walletAddress;
-        contentWrapper.toAddress = content.zeroExPost.walletAddress;
-        contentWrapper.sellPrice = Number(content.zeroExPost.price);
-        contentWrapper.collectionName = content.zeroExPost.collectionName;
-        contentWrapper.signedObject = content.zeroExPost.signedObject;
       }
 
       if (content.type === PostTypeEnum.BUY_EVENT) {
-        contentWrapper.image = content.zeroExPost.image;
-        contentWrapper.fromAddress = content.zeroExPost.walletAddress;
         contentWrapper.toAddress = content.owner.walletAddress;
-        contentWrapper.sellPrice = Number(content.zeroExPost.price);
-        contentWrapper.collectionName = content.zeroExPost.collectionName;
-        contentWrapper.signedObject = content.zeroExPost.signedObject;
       }
 
       result.push(contentWrapper);

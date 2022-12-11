@@ -1,10 +1,11 @@
-import { CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { SubscriptionRepository } from '../../repository/subscriptions.repository';
 import { UserEntity } from './user.entity';
 
-@Entity('subscriptions')
+@Entity({ tableName: 'subscriptions', customRepository: () => SubscriptionRepository })
 export class SubscriptionEntity {
-  @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryKey()
+    id!: number;
 
   @ManyToOne(() => UserEntity)
     respondent: UserEntity;
@@ -12,9 +13,9 @@ export class SubscriptionEntity {
   @ManyToOne(() => UserEntity)
     subscriber: UserEntity;
 
-  @CreateDateColumn({ name: 'creation_date' })
-    creationDate: Date;
+  @Property({ name: 'creation_date' })
+    creationDate = new Date();
 
-  @UpdateDateColumn({ name: 'update_date' })
-    updateDate: Date;
+  @Property({ name: 'update_date', onUpdate: () => new Date() })
+    updateDate = new Date();
 }

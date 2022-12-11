@@ -83,13 +83,13 @@ export class FeedController {
     return this.feedService.createCommentMetadata(data);
   }
 
-  @Post('/:contentId')
-  @UseGuards(AuthGuard())
-  public async publishContent(
-    @Param() { contentId }: ContentIdDto,
-  ): Promise<void> {
-    return this.feedService.publishContent(contentId);
-  }
+  // @Post('/:contentId')
+  // @UseGuards(AuthGuard())
+  // public async publishContent(
+  //   @Param() { contentId }: ContentIdDto,
+  // ): Promise<void> {
+  //   return this.feedService.publishContent(contentId);
+  // }
 
   @Post('/:lensId/repost/:newLensId')
   @UseGuards(AuthGuard())
@@ -100,13 +100,13 @@ export class FeedController {
     return this.feedService.repostContent(lensId, newLensId, description);
   }
 
-  @Put('/:contentId/:lensId')
-  @UseGuards(AuthGuard())
-  public async bindContentWithLens(
-    @Param() { contentId, lensId }: ContentWithLensIdsDto,
-  ): Promise<void> {
-    return this.feedService.bindContentWithLensId(contentId, lensId);
-  }
+  // @Put('/:contentId/:lensId')
+  // @UseGuards(AuthGuard())
+  // public async bindContentWithLens(
+  //   @Param() { contentId, lensId }: ContentWithLensIdsDto,
+  // ): Promise<void> {
+  //   return this.feedService.bindContentWithLensId(contentId, lensId);
+  // }
 
   @Delete('/:contentId')
   @UseGuards(AuthGuard())

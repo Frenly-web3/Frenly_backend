@@ -1,18 +1,19 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Property, Enum, PrimaryKey } from '@mikro-orm/core';
+import { ProcessedBlocksRepository } from '../../repository/processed-blocks.repository';
 
 import { BlockchainTypeEnum } from '../../infrastructure/config/enums/blockchain-type.enum';
 
-@Entity('processed_blocks')
+@Entity({ tableName: 'processed_blocks', customRepository: () => ProcessedBlocksRepository })
 export class ProcessedBlocksEntity {
-  @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryKey()
+    id!: number;
 
-  @Column({ name: 'block_number' })
+  @Property({ name: 'block_number' })
     blockNumber: number;
 
-  @Column({ name: 'blockchain_type', enum: BlockchainTypeEnum })
+  @Enum({ name: 'blockchain_type', type: () => BlockchainTypeEnum })
     type: BlockchainTypeEnum;
 
-  @Column()
+  @Property()
     timestamp: Date;
 }

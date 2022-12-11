@@ -1,45 +1,46 @@
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, OneToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import { NftTokenPostRepository } from '../../repository/nft-token-post.repository';
 
 import { NftMetadataEntity } from './nft-metadata.entity';
 import { PostEntity } from './post.entity';
 
-@Entity('nft_token_post')
+@Entity({ tableName: 'nft_token_post', customRepository: () => NftTokenPostRepository })
 export class NftTokenPostEntity {
-  @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryKey()
+    id!: number;
 
-  @Column({ name: 'tx_hash' })
+  @Property({ name: 'tx_hash' })
     txHash: string;
 
-  @Column({ name: 'token_id' })
+  @Property({ name: 'token_id' })
     tokenId: string;
 
-  @Column({ name: 'from_address' })
+  @Property({ name: 'from_address' })
     fromAddress: string;
 
-  @Column({ name: 'to_address' })
+  @Property({ name: 'to_address' })
     toAddress: string;
 
-  @Column({ name: 'sc_address' })
+  @Property({ name: 'sc_address' })
     scAddress: string;
 
-  @Column({ name: 'block_number' })
+  @Property({ name: 'block_number' })
     blockNumber: number;
 
-  @Column({ name: 'lens_id', nullable: true })
+  @Property({ name: 'lens_id', nullable: true })
     lensId: string;
 
-  @Column({ name: 'is_mirror', default: false })
+  @Property({ name: 'is_mirror', default: false })
     isMirror: boolean;
 
-  @Column({ name: 'mirror_description', nullable: true })
+  @Property({ name: 'mirror_description', nullable: true })
     mirrorDescription: string;
 
   // Relations
 
-  @OneToOne(() => PostEntity, (post) => post.nftPost, { nullable: true })
+  @OneToOne(() => PostEntity, (post) => post.nftPost, { nullable: true, orphanRemoval: true })
     post: PostEntity;
 
-  @OneToOne(() => NftMetadataEntity, (metadata) => metadata.nftPost)
+  @OneToOne(() => NftMetadataEntity, (metadata) => metadata.nftPost, { owner: true })
     metadata: NftMetadataEntity;
 }

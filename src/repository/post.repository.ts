@@ -1,11 +1,11 @@
+import { UserEntity } from 'src/data/entity/user.entity';
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource, In, Not, Repository } from 'typeorm';
+import { EntityRepository } from '@mikro-orm/postgresql';
+import { LoadStrategy, PopulateHint } from '@mikro-orm/core';
 import { CommunityEntity } from '../data/entity/community.entity';
 
 import { UserRepository } from './user.repository';
 import { NftTokenPostRepository } from './nft-token-post.repository';
-import { ZeroExRepository } from './zeroex.repository';
 
 import { PostEntity } from '../data/entity/post.entity';
 
@@ -13,71 +13,62 @@ import { PostStatusEnum } from '../infrastructure/config/enums/post-status.enum'
 import { UserRole } from '../infrastructure/config/enums/users-role.enum';
 
 import { NftPostDto } from '../dto/nft-posts/nft-post.dto';
-import { ZeroExPostDto } from '../dto/zeroex/zeroex-post.dto';
 
 @Injectable()
-export class PostRepository {
-  private readonly repository: Repository<PostEntity>;
-
-  constructor(
-    @InjectDataSource()
-    private readonly connection: DataSource,
-
-    private readonly userRepository: UserRepository,
-    private readonly nftTokenPostRepository: NftTokenPostRepository,
-    private readonly zeroExRepository: ZeroExRepository,
-  ) {
-    this.repository = connection.getRepository(PostEntity);
-  }
-
+export class PostRepository extends EntityRepository<PostEntity> {
   // Feed
 
   public async getByLensId(id: string): Promise<PostEntity> {
-    return this.repository.findOne({
-      where: {
+    return this.findOne(
+      {
         nftPost: { lensId: id },
       },
 
-      order: {
-        createdAt: 'DESC',
-      },
+      {
+        orderBy: {
+          createdAt: 'DESC',
+        },
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
-    });
+        populate: ['owner', 'nftPost', 'nftPost.metadata'],
+      },
+    );
   }
 
   public async getPostById(id: number): Promise<PostEntity> {
-    return this.repository.findOne({
-      where: {
+    return this.findOne(
+      {
         id,
       },
+      {
+        orderBy: {
+          createdAt: 'DESC',
+        },
 
-      order: {
-        createdAt: 'DESC',
+        populate: ['owner', 'nftPost', 'nftPost.metadata'],
       },
-
-      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
-    });
+    );
   }
 
   public async getTotalFeedByUserId(
     take?: number,
     skip?: number,
   ): Promise<PostEntity[]> {
-    return this.repository.find({
-      where: {
+    return this.find(
+      {
         status: PostStatusEnum.PUBLISHED,
       },
+      {
 
-      order: {
-        createdAt: 'DESC',
+        orderBy: {
+          createdAt: 'DESC',
+        },
+
+        limit: take,
+        offset: skip,
+
+        populate: ['owner', 'nftPost', 'nftPost.metadata'],
       },
-
-      take,
-      skip,
-
-      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
-    });
+    );
   }
 
   public async getTotalFeedWithExclusion(
@@ -85,21 +76,23 @@ export class PostRepository {
     take?: number,
     skip?: number,
   ): Promise<PostEntity[]> {
-    return this.repository.find({
-      where: {
+    return this.find(
+      {
         status: PostStatusEnum.PUBLISHED,
-        id: Not(In(excludedIds)),
+        id: { $nin: excludedIds },
       },
+      {
 
-      order: {
-        createdAt: 'DESC',
+        orderBy: {
+          createdAt: 'DESC',
+        },
+
+        limit: take,
+        offset: skip,
+
+        populate: ['owner', 'nftPost', 'nftPost.metadata'],
       },
-
-      take,
-      skip,
-
-      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
-    });
+    );
   }
 
   public async getOwnedFeedByUserId(
@@ -107,21 +100,22 @@ export class PostRepository {
     take?: number,
     skip?: number,
   ): Promise<PostEntity[]> {
-    return this.repository.find({
-      where: {
+    return this.find(
+      {
         owner: { id },
         status: PostStatusEnum.PUBLISHED,
       },
+      {
+        orderBy: {
+          createdAt: 'DESC',
+        },
 
-      order: {
-        createdAt: 'DESC',
+        limit: take,
+        offset: skip,
+
+        populate: ['owner', 'nftPost', 'nftPost.metadata'],
       },
-
-      take,
-      skip,
-
-      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
-    });
+    );
   }
 
   public async getOwnedFeedByUserIds(
@@ -129,21 +123,23 @@ export class PostRepository {
     take?: number,
     skip?: number,
   ): Promise<PostEntity[]> {
-    return this.repository.find({
-      where: {
-        owner: { id: In(ids) },
+    return this.find(
+      {
+        owner: { id: ids },
         status: PostStatusEnum.PUBLISHED,
       },
 
-      order: {
-        createdAt: 'DESC',
+      {
+        orderBy: {
+          createdAt: 'DESC',
+        },
+
+        limit: take,
+        offset: skip,
+
+        populate: ['owner', 'nftPost', 'nftPost.metadata'],
       },
-
-      take,
-      skip,
-
-      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
-    });
+    );
   }
 
   public async getCommunityFeed(
@@ -154,22 +150,24 @@ export class PostRepository {
 
   ): Promise<PostEntity[]> {
     try {
-      return await this.repository.find({
-        where: {
-          owner: { id: In(communityMemberIds) },
+      return await this.find(
+        {
+          owner: { id: communityMemberIds },
           status: PostStatusEnum.PUBLISHED,
         // nftPost: { scAddress: community.contractAddress.toLowerCase() },
         },
+        {
 
-        order: {
-          createdAt: 'DESC',
+          orderBy: {
+            createdAt: 'DESC',
+          },
+
+          limit: take,
+          offset: skip,
+
+          populate: ['owner', 'nftPost', 'nftPost.metadata'],
         },
-
-        take,
-        skip,
-
-        relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
-      });
+      );
     } catch (error) {
       console.log(error);
       throw new BadRequestException();
@@ -179,14 +177,16 @@ export class PostRepository {
   // Drafts
 
   public async getDraftById(id: number): Promise<PostEntity> {
-    return this.repository.findOne({
-      where: {
+    return this.findOne(
+      {
         id,
         status: PostStatusEnum.PENDING,
       },
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
-    });
+      {
+        populate: ['owner', 'nftPost', 'nftPost.metadata'],
+      },
+    );
   }
 
   public async getDraftsByUserId(
@@ -194,21 +194,24 @@ export class PostRepository {
     take?: number,
     skip?: number,
   ): Promise<PostEntity[]> {
-    return this.repository.find({
-      where: {
+    return this.find(
+      {
         owner: { id },
         status: PostStatusEnum.PENDING,
       },
 
-      order: {
-        createdAt: 'DESC',
+      {
+
+        orderBy: {
+          createdAt: 'DESC',
+        },
+
+        limit: take,
+        offset: skip,
+
+        populate: ['owner', 'nftPost', 'nftPost.metadata'],
       },
-
-      take,
-      skip,
-
-      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
-    });
+    );
   }
 
   // ADMIN
@@ -217,23 +220,28 @@ export class PostRepository {
     take?: number,
     skip?: number,
   ): Promise<PostEntity[]> {
-    return this.repository.find({
-      where: {
-        owner: {
-          role: UserRole.ADDED_BY_ADMIN,
-        },
+    return this.find(
+      {
+        owner: { role: { $eq: UserRole.ADDED_BY_ADMIN } },
+        // owner: {
+        // role: UserRole.ADDED_BY_ADMIN,
+        // },
         status: PostStatusEnum.PENDING,
       },
+      {
+        strategy: LoadStrategy.JOINED,
+        orderBy: {
+          createdAt: 'DESC',
+        },
 
-      order: {
-        createdAt: 'DESC',
+        limit: take,
+        offset: skip,
+
+        populateWhere: PopulateHint.ALL,
+
+        populate: ['owner.role', 'nftPost', 'nftPost.metadata'],
       },
-
-      take,
-      skip,
-
-      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
-    });
+    );
   }
 
   public async getAdminsPublishedPost(
@@ -241,73 +249,36 @@ export class PostRepository {
     take?: number,
     skip?: number,
   ): Promise<PostEntity[]> {
-    return this.repository.find({
-      where: {
+    return this.find(
+      {
         owner: {
-          role: UserRole.ADDED_BY_ADMIN,
+          role: { $eq: UserRole.ADDED_BY_ADMIN },
         },
         status: PostStatusEnum.PUBLISHED,
-        id: Not(In(notIncludedIds)),
+        id: { $nin: notIncludedIds },
       },
 
-      order: {
-        createdAt: 'DESC',
+      {
+        orderBy: {
+          createdAt: 'DESC',
+        },
+
+        limit: take,
+        offset: skip,
+
+        populate: ['owner', 'nftPost', 'nftPost.metadata'],
       },
-
-      take,
-      skip,
-
-      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
-    });
+    );
   }
 
-  public async createNftTokenPost(
-    userId: number,
-    data: NftPostDto,
-    status = PostStatusEnum.PUBLISHED,
-    createdAt = new Date(),
-    updatedAt = new Date(),
-  ): Promise<PostEntity> {
-    const owner = await this.userRepository.getOneById(userId);
-    const nftPost = await this.nftTokenPostRepository.create(data);
+  public async createNftTokenPost(post: PostEntity): Promise<PostEntity> {
+    try {
+      await this.persistAndFlush(post);
 
-    const entity = this.repository.create({
-      status,
-
-      createdAt,
-      updatedAt,
-
-      owner,
-      nftPost,
-    });
-
-    return this.repository.save(entity);
-  }
-
-  public async createZeroExPost(
-    userId: number,
-    data: ZeroExPostDto,
-  ): Promise<PostEntity> {
-    const owner = await this.userRepository.getOneById(userId);
-    const zeroExPost = await this.zeroExRepository.create(data);
-
-    const entity = this.repository.create({
-      status: PostStatusEnum.PUBLISHED,
-
-      type: data.type,
-
-      owner,
-      zeroExPost,
-    });
-
-    return this.repository.save(entity);
-  }
-
-  public async save(entity: PostEntity): Promise<PostEntity> {
-    if (entity?.nftPost != null) {
-      await this.nftTokenPostRepository.save(entity.nftPost);
+      return post;
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
     }
-
-    return this.repository.save(entity);
   }
 }

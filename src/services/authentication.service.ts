@@ -12,7 +12,7 @@ import { ApiJWTService } from './jwt.service';
 import { CurrentUserService } from './current-user.service';
 
 import { UserRepository } from '../repository/user.repository';
-import { RefreshTokenRepository } from '../repository/refresh-token.repository';
+// import { RefreshTokenRepository } from '../repository/refresh-token.repository';
 
 import { ErrorMessages } from '../infrastructure/config/const/error-messages.const';
 
@@ -34,7 +34,7 @@ export class AuthenticationService {
     private readonly currentUserService: CurrentUserService,
 
     private readonly userRepository: UserRepository,
-    private readonly refreshTokenRepository: RefreshTokenRepository,
+    // private readonly refreshTokenRepository: RefreshTokenRepository,
   ) {
     this.web3 = new Web3(configService.polygonMumbaiProvider);
     this.lensContract = new this.web3.eth.Contract(LensContractAbi as AbiItem[], this.configService.lensContractAddress);
@@ -72,61 +72,61 @@ export class AuthenticationService {
     return { nonce: user.nonce };
   }
 
-  public async verifySignature(walletAddress: string, signature: string): Promise<JwtPair> {
-    const lowerAddress = walletAddress.toLowerCase();
-    const user = await this.userRepository.getOneByWalletAddress(lowerAddress);
+  // public async verifySignature(walletAddress: string, signature: string): Promise<JwtPair> {
+  //   const lowerAddress = walletAddress.toLowerCase();
+  //   const user = await this.userRepository.getOneByWalletAddress(lowerAddress);
 
-    if (user == null) {
-      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
-    }
+  //   if (user == null) {
+  //     throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+  //   }
 
-    const recoveredAddress = await this.recoverSignature(user.nonce, signature);
+  //   const recoveredAddress = await this.recoverSignature(user.nonce, signature);
 
-    if (user.walletAddress !== recoveredAddress) {
-      throw new BadRequestException(ErrorMessages.INVALID_SIGNATURE);
-    }
+  //   if (user.walletAddress !== recoveredAddress) {
+  //     throw new BadRequestException(ErrorMessages.INVALID_SIGNATURE);
+  //   }
 
-    user.nonce = await this.generateNonce();
+  //   user.nonce = await this.generateNonce();
 
-    if (user.role === UserRole.ADDED_BY_ADMIN) {
-      user.role = UserRole.BASIC_USER;
-    }
+  //   if (user.role === UserRole.ADDED_BY_ADMIN) {
+  //     user.role = UserRole.BASIC_USER;
+  //   }
 
-    await this.userRepository.save(user);
+  //   await this.userRepository.save(user);
 
-    return this.jwtService.generateTokensPair(user.id, { walletAddress: user.walletAddress, role: user.role });
-  }
+  //   return this.jwtService.generateTokensPair(user.id, { walletAddress: user.walletAddress, role: user.role });
+  // }
 
-  public async refreshTokens(refreshToken: string): Promise<JwtPair> {
-    const payload = this.currentUserService.getCurrentUserInfo();
-    const user = await this.userRepository.getOneByWalletAddress(payload.walletAddress);
+  // public async refreshTokens(refreshToken: string): Promise<JwtPair> {
+  //   const payload = this.currentUserService.getCurrentUserInfo();
+  //   const user = await this.userRepository.getOneByWalletAddress(payload.walletAddress);
 
-    const storedRefreshToken = await this.jwtService.getStoredRefreshToken(payload.jti, refreshToken);
+  //   const storedRefreshToken = await this.jwtService.getStoredRefreshToken(payload.jti, refreshToken);
 
-    if (storedRefreshToken == null) {
-      throw new UnauthorizedException(ErrorMessages.INVALID_TOKEN);
-    }
+  //   if (storedRefreshToken == null) {
+  //     throw new UnauthorizedException(ErrorMessages.INVALID_TOKEN);
+  //   }
 
-    storedRefreshToken.isUsed = true;
-    this.refreshTokenRepository.save(storedRefreshToken);
+  //   storedRefreshToken.isUsed = true;
+  //   // this.refreshTokenRepository.save(storedRefreshToken);
 
-    return this.jwtService.generateTokensPair(user.id, { walletAddress: user.walletAddress, role: user.role });
-  }
+  //   return this.jwtService.generateTokensPair(user.id, { walletAddress: user.walletAddress, role: user.role });
+  // }
 
-  public async logout(refreshToken: string): Promise<void> {
-    const payload = this.currentUserService.getCurrentUserInfo();
+  // public async logout(refreshToken: string): Promise<void> {
+  //   const payload = this.currentUserService.getCurrentUserInfo();
 
-    const storedRefreshToken = await this.jwtService.getStoredRefreshToken(payload.jti, refreshToken);
+  //   const storedRefreshToken = await this.jwtService.getStoredRefreshToken(payload.jti, refreshToken);
 
-    if (storedRefreshToken == null) {
-      throw new UnauthorizedException(ErrorMessages.INVALID_TOKEN);
-    }
+  //   if (storedRefreshToken == null) {
+  //     throw new UnauthorizedException(ErrorMessages.INVALID_TOKEN);
+  //   }
 
-    storedRefreshToken.isInvalidated = true;
-    this.refreshTokenRepository.save(storedRefreshToken);
-  }
+  //   storedRefreshToken.isInvalidated = true;
+  //   // this.refreshTokenRepository.save(storedRefreshToken);
+  // }
 
-  // Helpers
+  // // Helpers
 
   public generateNonce(): number {
     return Math.floor(Math.random() * 1000000);
