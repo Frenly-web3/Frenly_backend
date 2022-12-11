@@ -144,6 +144,12 @@ import { CommunityController } from './controller/community.controller';
   ],
 })
 export class AppModule implements NestModule {
+  // before was only this
+//  configure(consumer: MiddlewareConsumer) {
+//     consumer.apply(httpContext.middleware, MikroOrmMiddleware).forRoutes('*');
+//   }
+//
+
   constructor(private readonly orm: MikroORM) {}
 
   configure(consumer: MiddlewareConsumer) {
