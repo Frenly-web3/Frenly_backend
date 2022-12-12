@@ -60,13 +60,19 @@ export class CommunityService {
       throw new UnauthorizedException();
     }
 
-    const newCommunity: CommunityDto = {
-      name,
-      contractAddress: contractAddress.toLowerCase(),
-      creator: currentUser,
-    };
+    const newCommunity = new CommunityEntity()
 
-    const community = await this.communityRepository.create(newCommunity);
+    newCommunity.name = name;
+    newCommunity.contractAddress = contractAddress.toLowerCase();
+    newCommunity.creator = currentUser;
+
+    // const newCommunity: CommunityDto = {
+    //   name,
+    //   contractAddress: contractAddress.toLowerCase(),
+    //   creator: currentUser,
+    // };
+
+    // const community = await this.communityRepository.create(newCommunity);
 
     const communityMembers = await this.getCommunityMembersFromSC(contractAddress, network);
 
@@ -74,7 +80,7 @@ export class CommunityService {
       return;
     }
 
-    await this.matchAndSaveCommunityMembers(communityMembers, community);
+    await this.matchAndSaveCommunityMembers(communityMembers, newCommunity);
   }
 
   // eslint-disable-next-line function-paren-newline
@@ -107,6 +113,7 @@ export class CommunityService {
 
     const uniqueCommunityMembers: string[] = [];
 
+    console.log(communityMembers.length)
     for (const member of communityMembers) {
       if (!uniqueCommunityMembers.find((uniqueCommunityMember) => uniqueCommunityMember === member)) {
         uniqueCommunityMembers.push(member);
@@ -114,6 +121,7 @@ export class CommunityService {
     }
     const allUsers = await this.userRepository.getAll();
     for (const member of uniqueCommunityMembers) {
+      console.log(newMembers.length)
       const user = allUsers.find((userFromDB) => userFromDB.walletAddress.toLowerCase() === member.toLowerCase());
 
       if (user) {
@@ -121,22 +129,26 @@ export class CommunityService {
         // community.members.push(user); //not working
         newMembers.push(user);
       } else {
-        const userCreateData: UserDto = {
-          walletAddress: member.toLowerCase(),
-          nonce: this.authService.generateNonce(),
+        // const userCreateData: UserDto = {
+        //   walletAddress: member.toLowerCase(),
+        //   nonce: this.authService.generateNonce(),
 
-        };
-        const newUser = await this.userRepository.create(userCreateData);
-        if (!newUser) {
-          throw new BadRequestException('sth went wr');
-        }
+        // };
+        // const newUser = await this.userRepository.createDraftUser(userCreateData);
+        // if (!newUser) {
+        //   throw new BadRequestException('sth went wr');
+        // }
         // community.members.push(newUser); //not working
+
+        const newUser = new UserEntity()
+        newUser.walletAddress = member.toLowerCase()
+        newUser.nonce = this.authService.generateNonce();
         newMembers.push(newUser);
       }
     }
 
-    community.members = [...newMembers];
-    await this.communityRepository.save(community);
+    community.members = newMembers;
+    await this.communityRepository.create(community);
   }
 
   private mapCommunitiesData(communities: CommunityEntity[]): CommunitiesLookUpDto[] {
