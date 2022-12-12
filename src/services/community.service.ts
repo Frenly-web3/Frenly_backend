@@ -11,6 +11,7 @@ import { UserDto } from '../dto/user/user.dto';
 import { CommunityEntity } from '../data/entity/community.entity';
 import { UserRepository } from '../repository/user.repository';
 import { AuthenticationService } from './authentication.service';
+import { BlockchainTypeEnum } from 'src/infrastructure/config/enums/blockchain-type.enum';
 
 @Injectable()
 export class CommunityService {
@@ -43,7 +44,7 @@ export class CommunityService {
   ): Promise<void> {
     // for testing
     // const contractAddress = '0xe785E82358879F061BC3dcAC6f0444462D4b5330';
-    const { contractAddress, name } = createCommunityDto;
+    const { contractAddress, name, network } = createCommunityDto;
 
     const communityFromDB = await this.communityRepository.getOneByContractAddress(contractAddress);
 
@@ -67,7 +68,7 @@ export class CommunityService {
 
     const community = await this.communityRepository.create(newCommunity);
 
-    const communityMembers = await this.getCommunityMembersFromSC(contractAddress);
+    const communityMembers = await this.getCommunityMembersFromSC(contractAddress, network);
 
     if (communityMembers.length === 0) {
       return;
@@ -79,12 +80,13 @@ export class CommunityService {
   // eslint-disable-next-line function-paren-newline
   public async getCommunityMembersFromSC(
     contractAddress: string,
+    network: BlockchainTypeEnum,
   ): Promise<string[]> {
     try {
       const { data } = await axios
         .get(
         // eslint-disable-next-line max-len
-          `https://eth-mainnet.g.alchemy.com/nft/v2/${process.env.ALCHEMY_API_KEY}/getOwnersForCollection/?contractAddress=${contractAddress}&withTokenBalances=false`, { timeout: 20000 },
+          `https://${network === BlockchainTypeEnum.ETHEREUM ? 'eth' : 'polygon'}-mainnet.g.alchemy.com/nft/v2/${network === BlockchainTypeEnum.ETHEREUM ? process.env.ALCHEMY_API_KEY_ETHEREUM : process.env.ALCHEMY_API_KEY_POLYGON}/getOwnersForCollection/?contractAddress=${contractAddress}&withTokenBalances=false`, { timeout: 20000 },
           // eslint-disable-next-line max-len
         );
 
