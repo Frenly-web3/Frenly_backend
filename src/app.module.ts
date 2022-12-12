@@ -15,6 +15,7 @@ import * as httpContext from 'express-http-context';
 
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { CommentRepository } from './repository/comment.repository';
 import { CommunityRepository } from './repository/community.repository';
 import { JwtStrategy } from './infrastructure/middlewares/strategies/jwt.strategy';
 
@@ -145,6 +146,7 @@ import { CommunityController } from './controller/community.controller';
     SubscriptionRepository,
     ZeroExRepository,
     CommunityRepository,
+    CommentRepository,
   ],
 })
 export class AppModule implements NestModule {

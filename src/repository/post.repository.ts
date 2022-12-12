@@ -56,7 +56,7 @@ export class PostRepository {
         createdAt: 'DESC',
       },
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
+      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost', 'comments.creator'],
     });
   }
 

@@ -4,6 +4,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { v4 } from 'uuid';
+import { PostReactionsLookupDto } from 'src/dto/nft-posts/post-reactions-lookup.dto';
+import { CommentEntity } from '../data/entity/comment.entity';
+import { CommentCreateDto } from '../dto/comments/create-comment.dto';
+import { CommentRepository } from '../repository/comment.repository';
 import { CommunityRepository } from '../repository/community.repository';
 
 import { CurrentUserService } from './current-user.service';
@@ -30,7 +34,7 @@ import { PostTypeEnum } from '../infrastructure/config/enums/post-type.enum';
 import { NftPostLookupDto } from '../dto/nft-posts/nft-post-lookup.dto';
 import { NftPostDto } from '../dto/nft-posts/nft-post.dto';
 import { TransferTypes } from '../infrastructure/config/const/transfer-types.const';
-import { CommentMetadataDto } from '../dto/comments/comment-metadata.dto';
+import { CommentMetadataDto } from '../dto/comments/comment-data.dto';
 
 @Injectable()
 export class FeedService {
@@ -42,6 +46,8 @@ export class FeedService {
     private readonly userRepository: UserRepository,
     private readonly postRepository: PostRepository,
     private readonly subscriptionRepository: SubscriptionRepository,
+
+    private readonly commentRepository: CommentRepository,
   ) {}
 
   public async getFeed(
@@ -190,13 +196,127 @@ export class FeedService {
     return link;
   }
 
-  public async createCommentMetadata(
+  public async createComment(
     data: CommentMetadataDto,
   ): Promise<string> {
-    const metadata = this.mapCommentMetadata(data);
-    const link = await this.ipfsService.upload(metadata);
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const currentUser = await this.userRepository.getOneByWalletAddress(
+      walletAddress,
+    );
 
-    return link;
+    if (currentUser == null) {
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
+    const { postId, comment } = data;
+
+    const post = await this.postRepository.getPostById(postId);
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    const commentContent: CommentCreateDto = {
+      post,
+      description: comment,
+      creator: currentUser,
+    };
+
+    const newComment = await this.commentRepository.create(commentContent);
+
+    return newComment.id.toString();
+  }
+
+  public async getPostComments(
+    postId: string,
+  ): Promise<CommentEntity[]> {
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const currentUser = await this.userRepository.getOneByWalletAddress(
+      walletAddress,
+    );
+
+    if (currentUser == null) {
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
+
+    const post = await this.postRepository.getPostById(Number(postId));
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    // will it return user values?
+    return post.comments;
+  }
+
+  public async likeOrUnlikePost(
+    postId: string,
+  ): Promise<void> {
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const currentUser = await this.userRepository.getOneByWalletAddress(
+      walletAddress,
+    );
+
+    if (currentUser == null) {
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
+
+    const post = await this.postRepository.getPostById(Number(postId));
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    const indexOfUserLike = post.likes.findIndex((user) => user === currentUser);
+
+    if (indexOfUserLike === -1) {
+      post.likes.push(currentUser);
+      await this.postRepository.save(post);
+    } else {
+      post.likes.splice(indexOfUserLike, 1);
+      await this.postRepository.save(post);
+    }
+  }
+
+  public async getIsPostLikedByUser(
+    postId: string,
+  ): Promise<boolean> {
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const currentUser = await this.userRepository.getOneByWalletAddress(
+      walletAddress,
+    );
+
+    if (currentUser == null) {
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
+
+    const post = await this.postRepository.getPostById(Number(postId));
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    return post.likes.includes(currentUser);
+  }
+
+  public async getPostReactions(
+    postId: number,
+  ): Promise<PostReactionsLookupDto> {
+    const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    const currentUser = await this.userRepository.getOneByWalletAddress(
+      walletAddress,
+    );
+
+    if (currentUser == null) {
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
+
+    const post = await this.postRepository.getPostById(postId);
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    return this.mapPostReactions(post);
   }
 
   public async publishContent(contentId: number): Promise<void> {
@@ -250,13 +370,13 @@ export class FeedService {
     await this.postRepository.save(content);
   }
 
-  public async repostContent(postId: number, description: string): Promise<void> {
+  public async repostContent(postId: string, description: string): Promise<void> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
     const { id } = await this.userRepository.getOneByWalletAddress(
       walletAddress,
     );
 
-    const post = await this.postRepository.getPostById(postId);
+    const post = await this.postRepository.getPostById(Number(postId));
 
     if (post == null) {
       throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
@@ -291,8 +411,8 @@ export class FeedService {
     );
 
     repost.nftPost.isMirror = true;
-    repost.nftPost.lensId = newLensId;
     repost.nftPost.mirrorDescription = description;
+    repost.originalPost = post;
 
     await this.postRepository.save(repost);
   }
@@ -394,32 +514,32 @@ export class FeedService {
     };
   }
 
-  private mapCommentMetadata(data: CommentMetadataDto): LensMetadata {
-    const attributes: PublicationMetadataAttribute[] = [];
+  // private mapCommentMetadata(data: CommentMetadataDto): LensMetadata {
+  //   const attributes: PublicationMetadataAttribute[] = [];
 
-    attributes.push({
-      value: data.comment,
-      traitType: 'comment',
-      displayType: PublicationMetadataDisplayType.string,
-    });
+  //   attributes.push({
+  //     value: data.comment,
+  //     traitType: 'comment',
+  //     displayType: PublicationMetadataDisplayType.string,
+  //   });
 
-    attributes.push({
-      value: data.lensId,
-      traitType: 'pubId',
-      displayType: PublicationMetadataDisplayType.string,
-    });
+  //   attributes.push({
+  //     value: data.lensId,
+  //     traitType: 'pubId',
+  //     displayType: PublicationMetadataDisplayType.string,
+  //   });
 
-    return {
-      version: PublicationMetadataVersions.two,
-      metadata_id: v4(),
-      description: 'SocialFi nft comment',
-      content: data.comment,
-      locale: 'en-Us',
-      mainContentFocus: PublicationMainFocus.TEXT_ONLY,
-      name: `SocialFi comment for ${data.lensId} post`,
-      attributes,
-    };
-  }
+  //   return {
+  //     version: PublicationMetadataVersions.two,
+  //     metadata_id: v4(),
+  //     description: 'SocialFi nft comment',
+  //     content: data.comment,
+  //     locale: 'en-Us',
+  //     mainContentFocus: PublicationMainFocus.TEXT_ONLY,
+  //     name: `SocialFi comment for ${data.lensId} post`,
+  //     attributes,
+  //   };
+  // }
 
   private mapUserContent(contents: PostEntity[]): NftPostLookupDto[] {
     const result: NftPostLookupDto[] = [];
@@ -446,6 +566,10 @@ export class FeedService {
         contentWrapper.lensId = content.nftPost.lensId;
         contentWrapper.isMirror = content.nftPost.isMirror;
         contentWrapper.mirrorDescription = content.nftPost.mirrorDescription;
+      }
+
+      if (content.nftPost.isMirror) {
+        contentWrapper.originalPost = content.originalPost.id;
       }
 
       if (content.type === PostTypeEnum.SELL_ORDER) {
@@ -478,5 +602,16 @@ export class FeedService {
     }
 
     return result;
+  }
+
+  private mapPostReactions(content: PostEntity): PostReactionsLookupDto {
+    const contentWrapper = new PostReactionsLookupDto();
+
+    contentWrapper.likes = content.likes.length;
+    contentWrapper.repostsAmount = content.reposts.length;
+    contentWrapper.comments = content.comments;
+    contentWrapper.commentsAmount = content.comments.length;
+
+    return contentWrapper;
   }
 }

@@ -17,7 +17,7 @@ export class CommunityEntity {
   @ManyToOne(() => UserEntity, (user) => user.createdCommunities)
     creator: UserEntity;
 
-  @ManyToMany(() => UserEntity)
+  @ManyToMany(() => UserEntity, { cascade: true })
   @JoinTable()
     members: UserEntity[];
 

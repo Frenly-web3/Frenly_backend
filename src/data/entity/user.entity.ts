@@ -1,5 +1,6 @@
 import { AutoMap } from '@automapper/classes';
 import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { CommentEntity } from './comment.entity';
 import { UserRole } from '../../infrastructure/config/enums/users-role.enum';
 import { CommunityEntity } from './community.entity';
 
@@ -54,4 +55,11 @@ export class UserEntity {
   @ManyToMany(() => CommunityEntity, (community) => community.members)
     // @JoinTable()
     communitiesMember: CommunityEntity[];
+
+  @ManyToMany(() => PostEntity, (post) => post.likes, {cascade: true})
+    // @JoinTable()
+    likes: PostEntity[];
+
+  @OneToMany(() => CommentEntity, (comment) => comment.creator)
+    createdComments: CommentEntity[];
 }

@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv';
 import { DataSource } from 'typeorm';
+import { CommentEntity } from './entity/comment.entity';
 
 import { NftMetadataEntity } from './entity/nft-metadata.entity';
 import { NftTokenPostEntity } from './entity/nft-token-post.entity';
@@ -31,6 +32,7 @@ export const AppDataSource = new DataSource({
     SubscriptionEntity,
     ZeroExEntity,
     CommunityEntity,
+    CommentEntity,
   ],
   migrations: ['src/data/migrations/*.*'],
   synchronize: false,
