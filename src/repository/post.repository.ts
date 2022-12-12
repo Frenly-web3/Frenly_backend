@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, In, Not, Repository } from 'typeorm';
+import { CommunityEntity } from '../data/entity/community.entity';
 
 import { UserRepository } from './user.repository';
 import { NftTokenPostRepository } from './nft-token-post.repository';
@@ -59,7 +60,10 @@ export class PostRepository {
     });
   }
 
-  public async getTotalFeedByUserId(take?: number, skip?: number): Promise<PostEntity[]> {
+  public async getTotalFeedByUserId(
+    take?: number,
+    skip?: number,
+  ): Promise<PostEntity[]> {
     return this.repository.find({
       where: {
         status: PostStatusEnum.PUBLISHED,
@@ -76,7 +80,11 @@ export class PostRepository {
     });
   }
 
-  public async getTotalFeedWithExclusion(excludedIds: number[], take?: number, skip?: number): Promise<PostEntity[]> {
+  public async getTotalFeedWithExclusion(
+    excludedIds: number[],
+    take?: number,
+    skip?: number,
+  ): Promise<PostEntity[]> {
     return this.repository.find({
       where: {
         status: PostStatusEnum.PUBLISHED,
@@ -94,7 +102,11 @@ export class PostRepository {
     });
   }
 
-  public async getOwnedFeedByUserId(id: number, take?: number, skip?: number): Promise<PostEntity[]> {
+  public async getOwnedFeedByUserId(
+    id: number,
+    take?: number,
+    skip?: number,
+  ): Promise<PostEntity[]> {
     return this.repository.find({
       where: {
         owner: { id },
@@ -112,7 +124,11 @@ export class PostRepository {
     });
   }
 
-  public async getOwnedFeedByUserIds(ids: number[], take?: number, skip?: number): Promise<PostEntity[]> {
+  public async getOwnedFeedByUserIds(
+    ids: number[],
+    take?: number,
+    skip?: number,
+  ): Promise<PostEntity[]> {
     return this.repository.find({
       where: {
         owner: { id: In(ids) },
@@ -130,6 +146,36 @@ export class PostRepository {
     });
   }
 
+  public async getCommunityFeed(
+    community: CommunityEntity,
+    communityMemberIds: number[],
+    take?: number,
+    skip?: number,
+
+  ): Promise<PostEntity[]> {
+    try {
+      return await this.repository.find({
+        where: {
+          owner: { id: In(communityMemberIds) },
+          status: PostStatusEnum.PUBLISHED,
+        // nftPost: { scAddress: community.contractAddress.toLowerCase() },
+        },
+
+        order: {
+          createdAt: 'DESC',
+        },
+
+        take,
+        skip,
+
+        relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
+      });
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
+    }
+  }
+
   // Drafts
 
   public async getDraftById(id: number): Promise<PostEntity> {
@@ -143,7 +189,11 @@ export class PostRepository {
     });
   }
 
-  public async getDraftsByUserId(id: number, take?: number, skip?: number): Promise<PostEntity[]> {
+  public async getDraftsByUserId(
+    id: number,
+    take?: number,
+    skip?: number,
+  ): Promise<PostEntity[]> {
     return this.repository.find({
       where: {
         owner: { id },
@@ -163,7 +213,10 @@ export class PostRepository {
 
   // ADMIN
 
-  public async getAdminsPost(take?: number, skip?: number): Promise<PostEntity[]> {
+  public async getAdminsPost(
+    take?: number,
+    skip?: number,
+  ): Promise<PostEntity[]> {
     return this.repository.find({
       where: {
         owner: {
@@ -183,7 +236,11 @@ export class PostRepository {
     });
   }
 
-  public async getAdminsPublishedPost(notIncludedIds?: number[], take?: number, skip?: number): Promise<PostEntity[]> {
+  public async getAdminsPublishedPost(
+    notIncludedIds?: number[],
+    take?: number,
+    skip?: number,
+  ): Promise<PostEntity[]> {
     return this.repository.find({
       where: {
         owner: {
@@ -207,7 +264,7 @@ export class PostRepository {
   public async createNftTokenPost(
     userId: number,
     data: NftPostDto,
-    status = PostStatusEnum.PENDING,
+    status = PostStatusEnum.PUBLISHED,
     createdAt = new Date(),
     updatedAt = new Date(),
   ): Promise<PostEntity> {
@@ -227,7 +284,10 @@ export class PostRepository {
     return this.repository.save(entity);
   }
 
-  public async createZeroExPost(userId: number, data: ZeroExPostDto): Promise<PostEntity> {
+  public async createZeroExPost(
+    userId: number,
+    data: ZeroExPostDto,
+  ): Promise<PostEntity> {
     const owner = await this.userRepository.getOneById(userId);
     const zeroExPost = await this.zeroExRepository.create(data);
 

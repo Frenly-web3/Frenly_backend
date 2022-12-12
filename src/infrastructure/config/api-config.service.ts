@@ -1,3 +1,4 @@
+import { CommunityEntity } from './../../data/entity/community.entity';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -42,6 +43,7 @@ export class ApiConfigService {
         ProcessedBlocksEntity,
         SubscriptionEntity,
         ZeroExEntity,
+        CommunityEntity,
       ],
       keepConnectionAlive: true,
       synchronize: false,

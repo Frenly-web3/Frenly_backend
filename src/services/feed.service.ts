@@ -1,5 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { v4 } from 'uuid';
+import { CommunityRepository } from '../repository/community.repository';
 
 import { CurrentUserService } from './current-user.service';
 import { IPFSService } from './ipfs.service';
@@ -33,20 +38,29 @@ export class FeedService {
     private readonly currentUserService: CurrentUserService,
     private readonly ipfsService: IPFSService,
 
+    private readonly communityRepository: CommunityRepository,
     private readonly userRepository: UserRepository,
     private readonly postRepository: PostRepository,
     private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 
-  public async getFeed(take: number, skip: number): Promise<NftPostLookupDto[]> {
+  public async getFeed(
+    take: number,
+    skip: number,
+  ): Promise<NftPostLookupDto[]> {
     const feed = await this.postRepository.getTotalFeedByUserId(take, skip);
 
     return this.mapUserContent(feed);
   }
 
-  public async getFilteredFeed(take: number, skip: number): Promise<NftPostLookupDto[]> {
+  public async getFilteredFeed(
+    take: number,
+    skip: number,
+  ): Promise<NftPostLookupDto[]> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-    const user = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
+    const user = await this.userRepository.getOneByWalletAddress(
+      walletAddress.toLowerCase(),
+    );
 
     // GET SUBSCRIPTION & OWN POSTS
 
@@ -54,41 +68,105 @@ export class FeedService {
     const subscriptionsIds = subscriptions.map((e) => e.id);
     subscriptionsIds.push(user.id);
 
-    const subsPosts = await this.postRepository.getOwnedFeedByUserIds(subscriptionsIds);
+    const subsPosts = await this.postRepository.getOwnedFeedByUserIds(
+      subscriptionsIds,
+    );
     const subsPostsIds = subsPosts.map((e) => e.id);
 
     // GET ADMINS POSTS
 
-    const appPosts = await this.postRepository.getAdminsPublishedPost(subsPostsIds);
+    const appPosts = await this.postRepository.getAdminsPublishedPost(
+      subsPostsIds,
+    );
     const appPostsIds = appPosts.map((e) => e.id);
 
     // OTHER POSTS
 
-    const otherPosts = await this.postRepository.getTotalFeedWithExclusion([...subsPostsIds, ...appPostsIds]);
+    const otherPosts = await this.postRepository.getTotalFeedWithExclusion([
+      ...subsPostsIds,
+      ...appPostsIds,
+    ]);
 
     // RESULTS
 
-    const result = [...subsPosts, ...appPosts, ...otherPosts].slice(skip).slice(0, take);
+    const result = [...subsPosts, ...appPosts, ...otherPosts]
+      .slice(skip)
+      .slice(0, take);
 
     return this.mapUserContent(result);
   }
 
-  public async getUnpublishedContent(take: number, skip: number): Promise<NftPostLookupDto[]> {
+  public async getCommunityFeed(
+    take: number,
+    skip: number,
+    communityId: number,
+  ): Promise<NftPostLookupDto[]> {
+    const community = await this.communityRepository.getOneById(communityId);
+
+    if (!community) {
+      throw new NotFoundException('Community is not found');
+    }
+
+    const communityMemberIds: number[] = community.members.map((member) => member.id);
+
+    const communityPosts = await this.postRepository.getCommunityFeed(community, communityMemberIds, take, skip);
+
+    // RESULTS
+
+    return this.mapUserContent(communityPosts);
+  }
+
+  public async getUnpublishedContent(
+    take: number,
+    skip: number,
+  ): Promise<NftPostLookupDto[]> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-    const currentUser = await this.userRepository.getOneByWalletAddress(walletAddress);
+    const currentUser = await this.userRepository.getOneByWalletAddress(
+      walletAddress,
+    );
 
     if (currentUser == null) {
       throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
     }
 
-    const content = await this.postRepository.getDraftsByUserId(currentUser.id, take, skip);
+    const content = await this.postRepository.getDraftsByUserId(
+      currentUser.id,
+      take,
+      skip,
+    );
+
+    return this.mapUserContent(content);
+  }
+
+  public async getPublishedContent(
+    take: number,
+    skip: number,
+    walletAddress: string,
+  ): Promise<NftPostLookupDto[]> {
+    // const { walletAddress } = this.currentUserService.getCurrentUserInfo();
+    console.log('walletAddress', walletAddress);
+    const currentUser = await this.userRepository.getOneByWalletAddress(
+      walletAddress,
+    );
+
+    if (currentUser == null) {
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
+    }
+
+    const content = await this.postRepository.getOwnedFeedByUserId(
+      currentUser.id,
+      take,
+      skip,
+    );
 
     return this.mapUserContent(content);
   }
 
   public async getContentMetadata(contentId: number): Promise<string> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-    const currentUser = await this.userRepository.getOneByWalletAddress(walletAddress);
+    const currentUser = await this.userRepository.getOneByWalletAddress(
+      walletAddress,
+    );
 
     if (currentUser == null) {
       throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
@@ -112,7 +190,9 @@ export class FeedService {
     return link;
   }
 
-  public async createCommentMetadata(data: CommentMetadataDto): Promise<string> {
+  public async createCommentMetadata(
+    data: CommentMetadataDto,
+  ): Promise<string> {
     const metadata = this.mapCommentMetadata(data);
     const link = await this.ipfsService.upload(metadata);
 
@@ -121,7 +201,9 @@ export class FeedService {
 
   public async publishContent(contentId: number): Promise<void> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-    const currentUser = await this.userRepository.getOneByWalletAddress(walletAddress);
+    const currentUser = await this.userRepository.getOneByWalletAddress(
+      walletAddress,
+    );
 
     if (currentUser == null) {
       throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
@@ -141,9 +223,14 @@ export class FeedService {
     await this.postRepository.save(content);
   }
 
-  public async bindContentWithLensId(contentId: number, lensId: string): Promise<void> {
+  public async bindContentWithLensId(
+    contentId: number,
+    lensId: string,
+  ): Promise<void> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-    const currentUser = await this.userRepository.getOneByWalletAddress(walletAddress);
+    const currentUser = await this.userRepository.getOneByWalletAddress(
+      walletAddress,
+    );
 
     if (currentUser == null) {
       throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
@@ -163,9 +250,15 @@ export class FeedService {
     await this.postRepository.save(content);
   }
 
-  public async repostContent(existsLensId: string, newLensId: string, description: string): Promise<void> {
+  public async repostContent(
+    existsLensId: string,
+    newLensId: string,
+    description: string,
+  ): Promise<void> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-    const { id } = await this.userRepository.getOneByWalletAddress(walletAddress);
+    const { id } = await this.userRepository.getOneByWalletAddress(
+      walletAddress,
+    );
 
     const post = await this.postRepository.getByLensId(existsLensId);
 
@@ -195,7 +288,11 @@ export class FeedService {
       blockNumber: post.nftPost.blockNumber,
     };
 
-    const repost = await this.postRepository.createNftTokenPost(id, content, PostStatusEnum.PUBLISHED);
+    const repost = await this.postRepository.createNftTokenPost(
+      id,
+      content,
+      PostStatusEnum.PUBLISHED,
+    );
 
     repost.nftPost.isMirror = true;
     repost.nftPost.lensId = newLensId;
@@ -206,7 +303,9 @@ export class FeedService {
 
   public async removeContent(contentId: number): Promise<void> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-    const currentUser = await this.userRepository.getOneByWalletAddress(walletAddress);
+    const currentUser = await this.userRepository.getOneByWalletAddress(
+      walletAddress,
+    );
 
     if (currentUser == null) {
       throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
@@ -338,7 +437,9 @@ export class FeedService {
 
       if (content.type === PostTypeEnum.NFT_TRANSFER) {
         contentWrapper.blockchainType = content.nftPost.metadata.blockchainType;
-        contentWrapper.transferType = content.owner.walletAddress === content.nftPost.fromAddress ? TransferTypes.SEND : TransferTypes.RECEIVE;
+        contentWrapper.transferType = content.owner.walletAddress === content.nftPost.fromAddress
+          ? TransferTypes.SEND
+          : TransferTypes.RECEIVE;
         contentWrapper.fromAddress = content.nftPost.fromAddress;
         contentWrapper.toAddress = content.nftPost.toAddress;
         contentWrapper.contractAddress = content.nftPost.scAddress;
