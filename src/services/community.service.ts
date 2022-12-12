@@ -44,7 +44,7 @@ export class CommunityService {
   ): Promise<void> {
     // for testing
     // const contractAddress = '0xe785E82358879F061BC3dcAC6f0444462D4b5330';
-    const { contractAddress, name } = createCommunityDto;
+    const { contractAddress, name, network } = createCommunityDto;
 
     const communityFromDB = await this.communityRepository.getOneByContractAddress(contractAddress);
 
@@ -68,7 +68,7 @@ export class CommunityService {
 
     const community = await this.communityRepository.create(newCommunity);
 
-    const communityMembers = await this.getCommunityMembersFromSC(contractAddress);
+    const communityMembers = await this.getCommunityMembersFromSC(contractAddress, network);
 
     if (communityMembers.length === 0) {
       return;
