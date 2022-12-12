@@ -15,6 +15,7 @@ export class CommunityController {
   ) {}
 
   @Get()
+  @UseGuards(AuthGuard())
   public async getAll(
     @Query() { take, skip }: PagingData,
   ): Promise<CommunitiesLookUpDto[]> {
@@ -22,6 +23,7 @@ export class CommunityController {
   }
 
   @Get('/:communityId')
+  @UseGuards(AuthGuard())
   public async getCommunity(
     @Param('communityId') communityId: number,
   ): Promise<CommunitiesLookUpDto> {

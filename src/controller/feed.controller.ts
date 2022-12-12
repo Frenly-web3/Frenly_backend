@@ -42,7 +42,7 @@ export class FeedController {
   }
 
   @Get('/community/:communityId')
-  // @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard())
   public async getCommunityFeed(
     @Query() { take, skip }: PagingData,
       @Param('communityId') communityId: number,
