@@ -11,6 +11,7 @@ import { UserDto } from '../dto/user/user.dto';
 import { CommunityEntity } from '../data/entity/community.entity';
 import { UserRepository } from '../repository/user.repository';
 import { AuthenticationService } from './authentication.service';
+import { BlockchainTypeEnum } from 'src/infrastructure/config/enums/blockchain-type.enum';
 
 @Injectable()
 export class CommunityService {
@@ -79,12 +80,13 @@ export class CommunityService {
   // eslint-disable-next-line function-paren-newline
   public async getCommunityMembersFromSC(
     contractAddress: string,
+    network: BlockchainTypeEnum,
   ): Promise<string[]> {
     try {
       const { data } = await axios
         .get(
         // eslint-disable-next-line max-len
-          `https://eth-mainnet.g.alchemy.com/nft/v2/${process.env.ALCHEMY_API_KEY}/getOwnersForCollection/?contractAddress=${contractAddress}&withTokenBalances=false`, { timeout: 20000 },
+          `https://${network === BlockchainTypeEnum.ETHEREUM ? 'eth' : 'polygon'}-mainnet.g.alchemy.com/nft/v2/${network === BlockchainTypeEnum.ETHEREUM ? process.env.ALCHEMY_API_KEY_ETHEREUM : process.env.ALCHEMY_API_KEY_ETHEREUM}/getOwnersForCollection/?contractAddress=${contractAddress}&withTokenBalances=false`, { timeout: 20000 },
           // eslint-disable-next-line max-len
         );
 
