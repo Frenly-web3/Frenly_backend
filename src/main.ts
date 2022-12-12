@@ -19,7 +19,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config: ApiConfigService = app.get(ApiConfigService);
-  const { port } = config;
+  const { port, postgresConfig } = config;
+
+  console.log(`DB config`, postgresConfig)
 
   if (!fs.existsSync('./public')) {
     fs.mkdirSync('./public');
