@@ -86,7 +86,7 @@ export class CommunityService {
       const { data } = await axios
         .get(
         // eslint-disable-next-line max-len
-          `https://${network === BlockchainTypeEnum.ETHEREUM ? 'eth' : 'polygon'}-mainnet.g.alchemy.com/nft/v2/${network === BlockchainTypeEnum.ETHEREUM ? process.env.ALCHEMY_API_KEY_ETHEREUM : process.env.ALCHEMY_API_KEY_ETHEREUM}/getOwnersForCollection/?contractAddress=${contractAddress}&withTokenBalances=false`, { timeout: 20000 },
+          `https://${network === BlockchainTypeEnum.ETHEREUM ? 'eth' : 'polygon'}-mainnet.g.alchemy.com/nft/v2/${network === BlockchainTypeEnum.ETHEREUM ? process.env.ALCHEMY_API_KEY_ETHEREUM : process.env.ALCHEMY_API_KEY_POLYGON}/getOwnersForCollection/?contractAddress=${contractAddress}&withTokenBalances=false`, { timeout: 20000 },
           // eslint-disable-next-line max-len
         );
 
