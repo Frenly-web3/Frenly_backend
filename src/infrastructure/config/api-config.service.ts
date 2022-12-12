@@ -47,6 +47,7 @@ export class ApiConfigService {
       synchronize: false,
       migrationsRun: true,
       migrations: ['src/data/migrations/*.*'],
+      sslmode: 'require'
     };
   }
 
