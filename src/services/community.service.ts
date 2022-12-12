@@ -47,11 +47,7 @@ export class CommunityService {
     // const contractAddress = '0xe785E82358879F061BC3dcAC6f0444462D4b5330';
     const { contractAddress, name } = createCommunityDto;
 
-    console.log('хотя бы тут');
-
     const communityFromDB = await this.communityRepository.getOneByContractAddress(contractAddress);
-
-    console.log('tut?');
 
     if (communityFromDB) {
       throw new BadRequestException('Community with this address already exists');
@@ -64,7 +60,6 @@ export class CommunityService {
     if (!currentUser || currentUser.role === UserRole.BASIC_USER) {
       throw new UnauthorizedException();
     }
-
     // const newCommunity: CommunityDto = {
     //   name,
     //   contractAddress: contractAddress.toLowerCase(),
@@ -74,6 +69,9 @@ export class CommunityService {
     const newCommunity = new CommunityEntity();
     newCommunity.name = name;
     newCommunity.contractAddress = contractAddress;
+    newCommunity.creator = currentUser;
+
+    console.log(newCommunity);
 
     const communityMembers = await this.getCommunityMembersFromSC(contractAddress);
 
@@ -118,11 +116,7 @@ export class CommunityService {
       }
     }
     const allUsers = await this.userRepository.getAll();
-    try {
-      await community.members.init();
-    } catch (error) {
-      console.log(error);
-    }
+
     for (const member of uniqueCommunityMembers) {
       const user = allUsers.find((userFromDB) => userFromDB.walletAddress.toLowerCase() === member.toLowerCase());
 
@@ -142,7 +136,7 @@ export class CommunityService {
     }
 
     // community.members = [...newMembers];
-    await this.communityRepository.save(community);
+    await this.communityRepository.createCommunity(community);
   }
 
   private mapCommunitiesData(communities: CommunityEntity[]): CommunitiesLookUpDto[] {

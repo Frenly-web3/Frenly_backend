@@ -1,9 +1,9 @@
 import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
-// import { RefreshTokenRepository } from '../../repository/refresh-token.repository';
+import { RefreshTokenRepository } from '../../repository/refresh-token.repository';
 import { UserEntity } from './user.entity';
 
-// customRepository: () => RefreshTokenRepository
-@Entity({ tableName: 'refresh_tokens',  })
+// 
+@Entity({ tableName: 'refresh_tokens', customRepository: () => RefreshTokenRepository })
 export class RefreshTokenEntity {
   @PrimaryKey({ name: 'token_id', unique: true, autoincrement: false })
     tokenId: string;

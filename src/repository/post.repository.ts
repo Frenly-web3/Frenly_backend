@@ -152,7 +152,9 @@ export class PostRepository extends EntityRepository<PostEntity> {
     try {
       return await this.find(
         {
+          // owner: { id: communityMemberIds, communitiesMember: { $eq: community.id } },
           owner: { id: communityMemberIds },
+
           status: PostStatusEnum.PUBLISHED,
         // nftPost: { scAddress: community.contractAddress.toLowerCase() },
         },

@@ -1,4 +1,4 @@
-import { Entity, ManyToMany, ManyToOne, PrimaryKey, Property, Collection, EntityRepositoryType } from '@mikro-orm/core';
+import { Entity, ManyToMany, ManyToOne, PrimaryKey, Property, Collection } from '@mikro-orm/core';
 import { CommunityRepository } from '../../repository/community.repository';
 import { UserEntity } from './user.entity';
 
@@ -25,6 +25,4 @@ export class CommunityEntity {
 
   @Property({ name: 'update_date', onUpdate: () => new Date() })
     updateDate = new Date();
-
-    [EntityRepositoryType]?: CommunityRepository;
 }

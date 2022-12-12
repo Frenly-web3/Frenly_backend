@@ -99,7 +99,7 @@ export class UserService {
       throw new BadRequestException(ErrorMessages.USER_ALREADY_SUBSCRIBED);
     }
 
-    // await this.subscriptionRepository.createSubscription(respondent.id, subscriber.id);
+    await this.subscriptionRepository.createSubscription(respondent, subscriber);
   }
 
   public async unsubscribe(respondentAddress: string): Promise<void> {
@@ -119,6 +119,6 @@ export class UserService {
       throw new BadRequestException(ErrorMessages.USER_NOT_SUBSCRIBED);
     }
 
-    // await this.subscriptionRepository.removeSubscription(respondent.id, subscriber.id);
+    await this.subscriptionRepository.removeSubscription(respondent.id, subscriber.id);
   }
 }

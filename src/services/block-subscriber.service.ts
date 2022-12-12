@@ -106,6 +106,12 @@ export class BlockSubscriberService {
 
       await this.matchAndSaveUsersTransfers(blockHeader, transfersData);
 
+      const newBlock = new ProcessedBlocksEntity();
+      newBlock.blockNumber = blockHeader.number;
+      newBlock.type = type;
+      newBlock.timestamp = blockHeader.timestamp.toString();
+
+      await this.processedBlockRepository.persistAndFlush(newBlock);
       // await this.processedBlockRepository.create(blockHeader.number, type, blockHeader.timestamp);
 
       this.logger.log(`Processed ${blockHeader.number} block in ${BlockchainTypeEnum[type]} completely.`);
@@ -180,9 +186,9 @@ export class BlockSubscriberService {
 
         const post = new PostEntity();
         post.nftPost = nftPost;
-        post.owner = member;
         post.status = PostStatusEnum.PUBLISHED;
         post.createdAt = creationDate;
+        post.owner = member;
 
         await this.postRepository.createNftTokenPost(post);
 

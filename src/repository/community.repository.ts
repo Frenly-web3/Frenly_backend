@@ -2,9 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import { EntityRepository } from '@mikro-orm/postgresql';
 import { CommunityEntity } from '../data/entity/community.entity';
 
-
 export class CommunityRepository extends EntityRepository<CommunityEntity> {
-  
   public async getAll(take?: number, skip?: number): Promise<CommunityEntity[]> {
     try {
       return await this.findAll({
@@ -35,13 +33,7 @@ export class CommunityRepository extends EntityRepository<CommunityEntity> {
     }
   }
 
-  // public async create(data: CommunityDto): Promise<CommunityEntity> {
-  //   const community = await this.create(data);
-  //   await this.save(community);
-  //   return community;
-  // }
-
-  public async save(entity: CommunityEntity): Promise<CommunityEntity> {
+  public async createCommunity(entity: CommunityEntity): Promise<CommunityEntity> {
     try {
       await this.persistAndFlush(entity);
       return entity;

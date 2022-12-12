@@ -41,7 +41,12 @@ export class AdminService {
     });
 
     user.role = UserRole.ADDED_BY_ADMIN;
-    await this.userRepository.save(user);
+    try {
+      await this.userRepository.flush();
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
+    }
   }
 
   public async getAdminsPost(take: number, skip: number): Promise<NftPostLookupDto[]> {
@@ -72,19 +77,14 @@ export class AdminService {
     }
 
     post.status = PostStatusEnum.PUBLISHED;
-    // await this.postRepository.save(post);
+
+    try {
+      await this.postRepository.flush();
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
+    }
   }
-
-  // public async bindContentWithLensId(contentId: number, lensId: string): Promise<void> {
-  //   const post = await this.postRepository.getPostById(contentId);
-
-  //   if (post == null || post.status !== PostStatusEnum.PUBLISHED || post.owner.role !== UserRole.ADDED_BY_ADMIN) {
-  //     throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
-  //   }
-
-  //   post.nftPost.lensId = lensId;
-  //   await this.postRepository.save(post);
-  // }
 
   public async removeContent(contentId: number): Promise<void> {
     const post = await this.postRepository.getPostById(contentId);
@@ -94,6 +94,12 @@ export class AdminService {
     }
 
     post.status = PostStatusEnum.UNPUBLISHED;
+    try {
+      await this.postRepository.flush();
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
+    }
     // await this.postRepository.save(post);
   }
 

@@ -1,7 +1,6 @@
 import { Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ContentIdDto } from '../dto/nft-posts/content-id.dto';
-import { ContentWithLensIdsDto } from '../dto/nft-posts/content-with-lens-id.dto';
 import { NftPostLookupDto } from '../dto/nft-posts/nft-post-lookup.dto';
 import { PagingData } from '../dto/paging-data.dto';
 import { WalletAddressDto } from '../dto/user/wallet-address.dto';
@@ -43,13 +42,6 @@ export class AdminController {
   public async publishPost(@Param() { contentId }: ContentIdDto): Promise<void> {
     return this.adminService.publishAdminsPost(contentId);
   }
-
-  // @Put('/bind/:contentId/:lensId')
-  // @Roles(UserRole.ADMIN)
-  // @UseGuards(AuthGuard(), RolesGuard)
-  // public async bindContentWithLens(@Param() { contentId, lensId }: ContentWithLensIdsDto): Promise<void> {
-  //   return this.adminService.bindContentWithLensId(contentId, lensId);
-  // }
 
   @Delete('content/:contentId')
   @Roles(UserRole.ADMIN)

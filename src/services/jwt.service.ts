@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { UserRepository } from './../repository/user.repository';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import * as uuid from 'uuid';
@@ -6,7 +7,7 @@ import moment from 'moment';
 
 import { ApiConfigService } from '../infrastructure/config/api-config.service';
 
-// import { RefreshTokenRepository } from '../repository/refresh-token.repository';
+import { RefreshTokenRepository } from '../repository/refresh-token.repository';
 
 import { RefreshTokenEntity } from '../data/entity/refresh-token.entity';
 
@@ -20,37 +21,43 @@ export class ApiJWTService {
 
     private readonly jwtService: JwtService,
 
-    // private readonly refreshTokenRepository: RefreshTokenRepository,
+    private readonly refreshTokenRepository: RefreshTokenRepository,
+    private readonly userRepository: UserRepository
   ) {}
 
-  // public async generateTokensPair(userId: number, payload: JwtPayload): Promise<JwtPair> {
-  //   const refreshTokenId = uuid.v4();
-  //   const jti = uuid.v4();
+  public async generateTokensPair(userId: number, payload: JwtPayload): Promise<JwtPair> {
+    const refreshTokenId = uuid.v4();
+    const jti = uuid.v4();
 
-  //   const refreshTokenExpirationDate = moment().add(this.configService.refreshTokenExpirationTime, 'ms').toDate();
+    const refreshTokenExpirationDate = moment().add(this.configService.refreshTokenExpirationTime, 'ms').toDate();
 
-  //   const accessToken = await this.jwtService.signAsync({ ...payload, jti });
-  //   const refreshToken = await this.refreshTokenRepository.create(userId, {
-  //     tokenId: refreshTokenId,
-  //     jwtId: jti,
-  //     expiryDate: refreshTokenExpirationDate,
-  //   });
+    const accessToken = await this.jwtService.signAsync({ ...payload, jti });
+    const user = await this.userRepository.getOneById(userId);
 
-  //   return { accessToken, refreshToken: refreshToken.tokenId };
-  // }
+       if (!user) {
+      throw new NotFoundException();
+    }
+    const refreshToken = await this.refreshTokenRepository.createRefreshToken(user, {
+      tokenId: refreshTokenId,
+      jwtId: jti,
+      expiryDate: refreshTokenExpirationDate,
+    });
 
-  // public async getStoredRefreshToken(jwtId: string, refreshToken: string): Promise<RefreshTokenEntity> {
-  //   const storedRefreshToken = await this.refreshTokenRepository.getOneById(refreshToken);
+    return { accessToken, refreshToken: refreshToken.tokenId };
+  }
 
-  //   if (storedRefreshToken == null
-  //     || moment(storedRefreshToken.expiryDate).isBefore(Date.now())
-  //     || storedRefreshToken.isInvalidated
-  //     || storedRefreshToken.isUsed
-  //     || storedRefreshToken.jwtId !== jwtId
-  //   ) {
-  //     return null;
-  //   }
+  public async getStoredRefreshToken(jwtId: string, refreshToken: string): Promise<RefreshTokenEntity> {
+    const storedRefreshToken = await this.refreshTokenRepository.getOneById(refreshToken);
 
-  //   return storedRefreshToken;
-  // }
+    if (storedRefreshToken == null
+      || moment(storedRefreshToken.expiryDate).isBefore(Date.now())
+      || storedRefreshToken.isInvalidated
+      || storedRefreshToken.isUsed
+      || storedRefreshToken.jwtId !== jwtId
+    ) {
+      return null;
+    }
+
+    return storedRefreshToken;
+  }
 }

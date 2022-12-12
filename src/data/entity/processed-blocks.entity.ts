@@ -15,5 +15,5 @@ export class ProcessedBlocksEntity {
     type: BlockchainTypeEnum;
 
   @Property()
-    timestamp: Date;
+    timestamp: string;
 }

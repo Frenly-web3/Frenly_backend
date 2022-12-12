@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
@@ -11,64 +11,87 @@ import { UserEntity } from '../data/entity/user.entity';
 @Injectable()
 export class SubscriptionRepository extends EntityRepository<SubscriptionEntity> {
   public async getUserRespondentsById(userId: number): Promise<UserEntity[]> {
-    const subscriptions = await this.find(
-      {
-        subscriber: {
-          id: userId,
+    try {
+      const subscriptions = await this.find(
+        {
+          subscriber: {
+            id: userId,
+          },
         },
-      },
-      {
-        populate: ['respondent', 'subscriber'],
-      },
-    );
+        {
+          populate: ['respondent', 'subscriber'],
+        },
+      );
 
-    return subscriptions.map((x) => x.respondent);
+      return subscriptions.map((x) => x.respondent);
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
+    }
   }
 
   public async getUserSubscribers(userId: number): Promise<UserEntity[]> {
-    const subscriptions = await this.find(
-      {
-        respondent: {
-          id: userId,
+    try {
+      const subscriptions = await this.find(
+        {
+          respondent: {
+            id: userId,
+          },
         },
-      },
 
-      {
-        populate: ['respondent', 'subscriber'],
-      },
-    );
+        {
+          populate: ['respondent', 'subscriber'],
+        },
+      );
 
-    return subscriptions.map((x) => x.respondent);
+      return subscriptions.map((x) => x.respondent);
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
+    }
   }
 
-  // public async createSubscription(respondentId: number, subscriberId: number): Promise<SubscriptionEntity> {
-  //   const respondent = await this.userRepository.getOneById(respondentId);
-  //   const subscriber = await this.userRepository.getOneById(subscriberId);
+  public async createSubscription(respondent: UserEntity, subscriber: UserEntity): Promise<SubscriptionEntity> {
+    try {
+      const entity = this.create({
+        respondent,
+        subscriber,
+      });
 
-  //   const entity = this.repository.create({
-  //     respondent,
-  //     subscriber,
-  //   });
+      await this.persistAndFlush(entity);
 
-  //   await this.repository.save(entity);
+      return entity;
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
+    }
+  }
 
-  //   return entity;
-  // }
+  public async removeSubscription(respondentId: number, subscriberId: number): Promise<void> {
+    try {
+      const subscription = await this.findOne(
+        {
+          subscriber: {
+            id: subscriberId,
+          },
+          respondent: {
+            id: respondentId,
+          },
+        },
+        {
 
-  // public async removeSubscription(respondentId: number, subscriberId: number): Promise<void> {
-  //   const subscription = await this.findOne({
-  //     where: {
-  //       subscriber: {
-  //         id: subscriberId,
-  //       },
-  //       respondent: {
-  //         id: respondentId,
-  //       },
-  //     },
+          populate: ['respondent', 'subscriber'],
+        },
+      );
 
-  //     relations: ['respondent', 'subscriber'],
-  //   });
+      if (!subscription) {
+        throw new BadRequestException();
+      }
 
-  //   await this.removeAndFlush(subscription);
-  // }
+      await this.removeAndFlush(subscription);
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
+    }
+  }
 }
