@@ -250,17 +250,13 @@ export class FeedService {
     await this.postRepository.save(content);
   }
 
-  public async repostContent(
-    existsLensId: string,
-    newLensId: string,
-    description: string,
-  ): Promise<void> {
+  public async repostContent(postId: number, description: string): Promise<void> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
     const { id } = await this.userRepository.getOneByWalletAddress(
       walletAddress,
     );
 
-    const post = await this.postRepository.getByLensId(existsLensId);
+    const post = await this.postRepository.getPostById(postId);
 
     if (post == null) {
       throw new NotFoundException(ErrorMessages.CONTENT_NOT_FOUND);
