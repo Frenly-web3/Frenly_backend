@@ -1,5 +1,6 @@
 import { BlockchainTypeEnum } from 'src/infrastructure/config/enums/blockchain-type.enum';
-import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsString, IsEnum, IsInt, Min, Max } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateCommunityDto {
   @IsString()
@@ -10,8 +11,10 @@ export class CreateCommunityDto {
   @IsNotEmpty()
     contractAddress: string;
 
-  @IsNumber()
-  @IsNotEmpty()
+  @IsInt()
+  @Min(0)
+  @Max(1)
+  @Transform(({ value }) => Number(value))
     network: BlockchainTypeEnum;
 
   @IsString()
