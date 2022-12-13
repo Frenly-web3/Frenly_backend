@@ -20,7 +20,7 @@ const editFileName = (req, file, callback) => {
 
 const avatarsFilePath = 'avatars';
 const zeroExSellFilePath = 'zeroex/sell';
-const communityImageFilePath = 'community/images';
+const communityImageFilePath = 'community-content/images';
 
 export const ImageFilesInterceptor = (fieldName: MulterField[], dest: ImageFileFolder) => {
   let destination = './public/';
