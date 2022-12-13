@@ -44,7 +44,13 @@ export class CommunityRepository {
     }
   }
 
-  public async create(communityData: CommunityEntity): Promise<CommunityEntity> {
+  // public async create(data: CommunityDto): Promise<CommunityEntity> {
+  //   const community = this.repository.create(data);
+  //   await this.repository.save(community);
+  //   return community;
+  // }
+
+   public async create(communityData: CommunityEntity): Promise<CommunityEntity> {
     const community = this.repository.create(communityData);
     await this.repository.save(community);
     return community;

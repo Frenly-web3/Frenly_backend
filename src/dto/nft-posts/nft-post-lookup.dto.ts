@@ -37,4 +37,6 @@ export class NftPostLookupDto {
   creationDate: Date;
 
   transferType: string;
+
+  originalPost: number;
 }

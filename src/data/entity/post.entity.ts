@@ -1,6 +1,6 @@
+import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { CommentEntity } from './comment.entity';
 /* eslint-disable no-use-before-define */
-
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 import { PostStatusEnum } from '../../infrastructure/config/enums/post-status.enum';
 import { PostTypeEnum } from '../../infrastructure/config/enums/post-type.enum';
@@ -44,4 +44,11 @@ export class PostEntity {
 
   @OneToMany(() => PostEntity, (post) => post.originalPost)
     reposts: PostEntity[];
+
+  @OneToMany(() => CommentEntity, (comment) => comment.post, { nullable: true })
+    comments: CommentEntity[];
+
+  @ManyToMany(() => UserEntity)
+  @JoinTable()
+    likes: UserEntity[];
 }
