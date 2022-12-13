@@ -29,12 +29,8 @@ async function bootstrap() {
     fs.mkdirSync('./public/token-images');
   }
 
-  if (!fs.existsSync('./public/community')) {
-    fs.mkdirSync('./public/community');
-  }
-
-  if (!fs.existsSync('./public/community/images')) {
-    fs.mkdirSync('./public/community/images');
+  if (!fs.existsSync('./public/community-content/images')) {
+    fs.mkdirSync('./public/community-content/images');
   }
 
   try {
