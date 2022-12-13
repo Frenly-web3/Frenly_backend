@@ -16,6 +16,9 @@ export class CommunityEntity {
   @Column()
     description: string;
 
+  @Column({ nullable: true })
+    image: string;
+
   // relations
   @ManyToOne(() => UserEntity, (user) => user.createdCommunities)
     creator: UserEntity;

@@ -10,4 +10,6 @@ export class CommunitiesLookUpDto {
   membersAmount: number;
 
   description: string;
+
+  image: string;
 }

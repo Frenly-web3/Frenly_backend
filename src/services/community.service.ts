@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
+import fs from 'fs';
 import { UserEntity } from 'src/data/entity/user.entity';
 import { CommunitiesLookUpDto } from 'src/dto/community/communities-look-up.dto';
 import { UserRole } from 'src/infrastructure/config/enums/users-role.enum';
@@ -39,6 +40,7 @@ export class CommunityService {
 
   public async createCommunity(
     createCommunityDto: CreateCommunityDto,
+    image: Express.Multer.File,
   ): Promise<void> {
     // for testing
     // const contractAddress = '0xe785E82358879F061BC3dcAC6f0444462D4b5330';
@@ -65,6 +67,7 @@ export class CommunityService {
     newCommunity.contractAddress = contractAddress.toLowerCase();
     newCommunity.creator = currentUser;
     newCommunity.description = description;
+    newCommunity.image = image.filename;
 
     const communityMembers = await this.getCommunityMembersFromSC(contractAddress, network);
 
@@ -72,7 +75,7 @@ export class CommunityService {
       return;
     }
 
-    await this.matchAndSaveCommunityMembers(communityMembers, newCommunity);
+    await this.matchAndSaveCommunityMembers(communityMembers, newCommunity, image.path);
   }
 
   // eslint-disable-next-line function-paren-newline
@@ -102,7 +105,7 @@ export class CommunityService {
   // works only for new communities.
   // there may be problems with existing communities because the user may already be in the community.
   // so it will need to be rewritten
-  public async matchAndSaveCommunityMembers(communityMembers: string[], community: CommunityEntity): Promise<void> {
+  public async matchAndSaveCommunityMembers(communityMembers: string[], community: CommunityEntity, imagePath: string): Promise<void> {
     const newMembers: UserEntity[] = [];
 
     const uniqueCommunityMembers: string[] = [];
@@ -130,7 +133,18 @@ export class CommunityService {
     }
 
     community.members = newMembers;
-    await this.communityRepository.create(community);
+
+    try {
+      await this.communityRepository.create(community);
+    } catch (e) {
+      const filePath = `./${imagePath}`;
+
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      throw e;
+    }
   }
 
   private mapCommunitiesData(communities: CommunityEntity[]): CommunitiesLookUpDto[] {
@@ -145,6 +159,7 @@ export class CommunityService {
       contentWrapper.contractAddress = community.contractAddress;
       contentWrapper.membersAmount = community.members.length;
       contentWrapper.description = community.description;
+      contentWrapper.image = community.image;
 
       result.push(contentWrapper);
     }
@@ -161,6 +176,7 @@ export class CommunityService {
     contentWrapper.contractAddress = community.contractAddress;
     contentWrapper.membersAmount = community.members.length;
     contentWrapper.description = community.description;
+    contentWrapper.image = community.image;
 
     return contentWrapper;
   }
