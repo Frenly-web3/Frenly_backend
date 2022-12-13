@@ -13,8 +13,11 @@ export class CommunityEntity {
   @Column({ name: 'contract_address' })
     contractAddress: string;
 
+  @Column()
+    description: string;
+
   // relations
-  @ManyToOne(() => UserEntity, (user) => user.createdCommunities, { cascade: true })
+  @ManyToOne(() => UserEntity, (user) => user.createdCommunities)
     creator: UserEntity;
 
   @ManyToMany(() => UserEntity, { cascade: true })

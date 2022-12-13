@@ -42,13 +42,6 @@ export class CommunityService {
   ): Promise<void> {
     // for testing
     // const contractAddress = '0xe785E82358879F061BC3dcAC6f0444462D4b5330';
-    const { contractAddress, name, network } = createCommunityDto;
-
-    const communityFromDB = await this.communityRepository.getOneByContractAddress(contractAddress);
-
-    if (communityFromDB) {
-      throw new BadRequestException('Community with this address already exists');
-    }
     const payload = this.currentUserService.getCurrentUserInfo();
     const currentUserWalletAddress = payload.walletAddress;
     // const currentUserWalletAddress = '0xe213719356a12cb5610e70660e8f82fce8199fc0';
@@ -58,11 +51,20 @@ export class CommunityService {
       throw new UnauthorizedException();
     }
 
-    const newCommunity = new CommunityEntity()
+    const { contractAddress, name, network, description } = createCommunityDto;
+
+    const communityFromDB = await this.communityRepository.getOneByContractAddress(contractAddress);
+
+    if (communityFromDB) {
+      throw new BadRequestException('Community with this address already exists');
+    }
+
+    const newCommunity = new CommunityEntity();
 
     newCommunity.name = name;
     newCommunity.contractAddress = contractAddress.toLowerCase();
     newCommunity.creator = currentUser;
+    newCommunity.description = description;
 
     const communityMembers = await this.getCommunityMembersFromSC(contractAddress, network);
 
@@ -97,15 +99,15 @@ export class CommunityService {
     }
   }
 
-  // works only for new communities. 
-  // there may be problems with existing communities because the user may already be in the community. 
+  // works only for new communities.
+  // there may be problems with existing communities because the user may already be in the community.
   // so it will need to be rewritten
   public async matchAndSaveCommunityMembers(communityMembers: string[], community: CommunityEntity): Promise<void> {
     const newMembers: UserEntity[] = [];
 
     const uniqueCommunityMembers: string[] = [];
 
-    console.log(communityMembers.length)
+    console.log(communityMembers.length);
     for (const member of communityMembers) {
       if (!uniqueCommunityMembers.find((uniqueCommunityMember) => uniqueCommunityMember === member)) {
         uniqueCommunityMembers.push(member);
@@ -113,15 +115,15 @@ export class CommunityService {
     }
     const allUsers = await this.userRepository.getAll();
     for (const member of uniqueCommunityMembers) {
-      console.log(newMembers.length)
-      const user = allUsers.find((userFromDB) => userFromDB.walletAddress.toLowerCase() === member.toLowerCase());
+      console.log(newMembers.length);
+      const user = allUsers.find((userFromDB) => userFromDB.walletAddress.toLowerCase() == member.toLowerCase());
 
       if (user) {
         // check whether or not the user is already a member of this community, depending on whether or not it starts immediately
         newMembers.push(user);
       } else {
-        const newUser = new UserEntity()
-        newUser.walletAddress = member.toLowerCase()
+        const newUser = new UserEntity();
+        newUser.walletAddress = member.toLowerCase();
         newUser.nonce = this.authService.generateNonce();
         newMembers.push(newUser);
       }
@@ -142,6 +144,7 @@ export class CommunityService {
       contentWrapper.name = community.name;
       contentWrapper.contractAddress = community.contractAddress;
       contentWrapper.membersAmount = community.members.length;
+      contentWrapper.description = community.description;
 
       result.push(contentWrapper);
     }
@@ -157,6 +160,8 @@ export class CommunityService {
     contentWrapper.name = community.name;
     contentWrapper.contractAddress = community.contractAddress;
     contentWrapper.membersAmount = community.members.length;
+    contentWrapper.description = community.description;
+
     return contentWrapper;
   }
 }

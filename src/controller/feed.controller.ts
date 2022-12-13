@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PostReactionsLookupDto } from 'src/dto/nft-posts/post-reactions-lookup.dto';
+import { CommunityIdDto } from 'src/dto/community/community-id.dto';
 import { WalletAddressDto } from '../dto/user/wallet-address.dto';
 
 import { FeedService } from '../services/feed.service';
@@ -46,7 +47,7 @@ export class FeedController {
   @UseGuards(AuthGuard())
   public async getCommunityFeed(
     @Query() { take, skip }: PagingData,
-      @Param('communityId') communityId: number,
+      @Param() { communityId }: CommunityIdDto,
   ): Promise<NftPostLookupDto[]> {
     return this.feedService.getCommunityFeed(take, skip, communityId);
   }

@@ -13,4 +13,8 @@ export class CreateCommunityDto {
   @IsNumber()
   @IsNotEmpty()
     network: BlockchainTypeEnum;
+
+  @IsString()
+  @IsNotEmpty()
+    description: string;
 }
