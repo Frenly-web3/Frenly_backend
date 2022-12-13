@@ -6,4 +6,6 @@ export class UserDescriptionDto {
   description: string;
 
   totalFollowers: number;
+
+  totalSubscribers: number;
 }
