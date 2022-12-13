@@ -8,4 +8,6 @@ export class CommunitiesLookUpDto {
   creator: number;
 
   membersAmount: number;
+
+  description: string;
 }

@@ -19,6 +19,7 @@ export class CommunityRepository {
       return await this.repository.find({
         take,
         skip,
+        relations: ['creator', 'members']
       });
     } catch (error) {
       console.log(error);
@@ -28,7 +29,7 @@ export class CommunityRepository {
 
   public async getOneById(id: number): Promise<CommunityEntity> {
     try {
-      return await this.repository.findOne({ where: { id }, relations: ['members'] });
+      return await this.repository.findOne({ where: { id }, relations: ['members', 'creator'] });
     } catch (error) {
       console.log(error);
       throw new BadRequestException();

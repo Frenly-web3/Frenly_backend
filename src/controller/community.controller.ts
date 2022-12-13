@@ -1,3 +1,4 @@
+import { CommunityIdDto } from 'src/dto/community/community-id.dto';
 import { Controller, Post, UseGuards, Body, Get, Query, Param } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PagingData } from 'src/dto/paging-data.dto';
@@ -25,7 +26,7 @@ export class CommunityController {
   @Get('/:communityId')
   @UseGuards(AuthGuard())
   public async getCommunity(
-    @Param('communityId') communityId: number,
+    @Param() { communityId }: CommunityIdDto,
   ): Promise<CommunitiesLookUpDto> {
     return this.communityService.getCommunity(communityId);
   }
