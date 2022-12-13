@@ -45,7 +45,7 @@ export class PostEntity {
   @OneToMany(() => PostEntity, (post) => post.originalPost)
     reposts: PostEntity[];
 
-  @OneToMany(() => CommentEntity, (comment) => comment.post)
+  @OneToMany(() => CommentEntity, (comment) => comment.post, { nullable: true })
     comments: CommentEntity[];
 
   @ManyToMany(() => UserEntity)

@@ -56,7 +56,7 @@ export class PostRepository {
         createdAt: 'DESC',
       },
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost', 'comments.creator'],
+      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost', 'comments', 'likes', 'reposts'],
     });
   }
 
@@ -304,10 +304,26 @@ export class PostRepository {
   }
 
   public async save(entity: PostEntity): Promise<PostEntity> {
-    if (entity?.nftPost != null) {
-      await this.nftTokenPostRepository.save(entity.nftPost);
-    }
+    try {
+      if (entity?.nftPost != null) {
+        await this.nftTokenPostRepository.save(entity.nftPost);
+      }
 
-    return this.repository.save(entity);
+      return await this.repository.save(entity);
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
+    }
+  }
+
+  public async saveWithoutNftPostSave(entity: PostEntity): Promise<PostEntity> {
+    try {
+      await this.repository.save(entity);
+
+      return entity;
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
+    }
   }
 }

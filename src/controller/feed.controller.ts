@@ -105,7 +105,7 @@ export class FeedController {
   public async repostContent(
     @Param() { postId }: LensMirrorDto,
       @Body() { description }: RepostDescriptionDto,
-  ): Promise<void> {
+  ): Promise<string> {
     return this.feedService.repostContent(postId, description);
   }
 
@@ -117,7 +117,7 @@ export class FeedController {
     return this.feedService.likeOrUnlikePost(postId);
   }
 
-  @Get('/:postId/like')
+  @Get('/:postId/is-liked')
   @UseGuards(AuthGuard())
   public async isLikedContent(
     @Param() { postId }: LensMirrorDto,

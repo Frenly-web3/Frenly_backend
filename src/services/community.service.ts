@@ -64,14 +64,6 @@ export class CommunityService {
     newCommunity.contractAddress = contractAddress.toLowerCase();
     newCommunity.creator = currentUser;
 
-    // const newCommunity: CommunityDto = {
-    //   name,
-    //   contractAddress: contractAddress.toLowerCase(),
-    //   creator: currentUser,
-    // };
-
-    // const community = await this.communityRepository.create(newCommunity);
-
     const communityMembers = await this.getCommunityMembersFromSC(contractAddress, network);
 
     if (communityMembers.length === 0) {
@@ -105,7 +97,9 @@ export class CommunityService {
     }
   }
 
-  // работает только для новых сообществ. с существующими может быть проблемы из-за того, что пользователь уже может быть в сообществе. поэтому надо будет переписать
+  // works only for new communities. 
+  // there may be problems with existing communities because the user may already be in the community. 
+  // so it will need to be rewritten
   public async matchAndSaveCommunityMembers(communityMembers: string[], community: CommunityEntity): Promise<void> {
     const newMembers: UserEntity[] = [];
 
@@ -123,21 +117,9 @@ export class CommunityService {
       const user = allUsers.find((userFromDB) => userFromDB.walletAddress.toLowerCase() === member.toLowerCase());
 
       if (user) {
-        // нужна ли проверка на то, что у пользователь уже является мембером этого комьюнити или нет, зависит от того,сразу ли запускается или нет
-        // community.members.push(user); //not working
+        // check whether or not the user is already a member of this community, depending on whether or not it starts immediately
         newMembers.push(user);
       } else {
-        // const userCreateData: UserDto = {
-        //   walletAddress: member.toLowerCase(),
-        //   nonce: this.authService.generateNonce(),
-
-        // };
-        // const newUser = await this.userRepository.createDraftUser(userCreateData);
-        // if (!newUser) {
-        //   throw new BadRequestException('sth went wr');
-        // }
-        // community.members.push(newUser); //not working
-
         const newUser = new UserEntity()
         newUser.walletAddress = member.toLowerCase()
         newUser.nonce = this.authService.generateNonce();

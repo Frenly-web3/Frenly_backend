@@ -150,7 +150,6 @@ export class FeedService {
     walletAddress: string,
   ): Promise<NftPostLookupDto[]> {
     // const { walletAddress } = this.currentUserService.getCurrentUserInfo();
-    console.log('walletAddress', walletAddress);
     const currentUser = await this.userRepository.getOneByWalletAddress(
       walletAddress,
     );
@@ -244,7 +243,7 @@ export class FeedService {
       throw new NotFoundException('Post not found');
     }
 
-    // will it return user values?
+    //return user values?
     return post.comments;
   }
 
@@ -266,14 +265,14 @@ export class FeedService {
       throw new NotFoundException('Post not found');
     }
 
-    const indexOfUserLike = post.likes.findIndex((user) => user === currentUser);
+    const indexOfUserLike = post.likes.findIndex((user) => user.id === currentUser.id);
 
     if (indexOfUserLike === -1) {
       post.likes.push(currentUser);
-      await this.postRepository.save(post);
+      await this.postRepository.saveWithoutNftPostSave(post);
     } else {
       post.likes.splice(indexOfUserLike, 1);
-      await this.postRepository.save(post);
+      await this.postRepository.saveWithoutNftPostSave(post);
     }
   }
 
@@ -295,7 +294,12 @@ export class FeedService {
       throw new NotFoundException('Post not found');
     }
 
-    return post.likes.includes(currentUser);
+    const userLikeIndex = post.likes.findIndex((user) => user.id === currentUser.id);
+
+    if (userLikeIndex === -1) {
+      return false;
+    }
+    return true;
   }
 
   public async getPostReactions(
@@ -370,7 +374,7 @@ export class FeedService {
     await this.postRepository.save(content);
   }
 
-  public async repostContent(postId: string, description: string): Promise<void> {
+  public async repostContent(postId: string, description: string): Promise<string> {
     const { walletAddress } = this.currentUserService.getCurrentUserInfo();
     const { id } = await this.userRepository.getOneByWalletAddress(
       walletAddress,
@@ -414,7 +418,10 @@ export class FeedService {
     repost.nftPost.mirrorDescription = description;
     repost.originalPost = post;
 
-    await this.postRepository.save(repost);
+    //rewrite double save (double db trans)
+    const newRepost = await this.postRepository.save(repost);
+
+    return newRepost.id.toString();
   }
 
   public async removeContent(contentId: number): Promise<void> {

@@ -56,7 +56,7 @@ export class UserEntity {
     // @JoinTable()
     communitiesMember: CommunityEntity[];
 
-  @ManyToMany(() => PostEntity, (post) => post.likes, {cascade: true})
+  @ManyToMany(() => PostEntity, (post) => post.likes)
     // @JoinTable()
     likes: PostEntity[];
 
