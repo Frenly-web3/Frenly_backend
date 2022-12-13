@@ -14,7 +14,7 @@ export class CommunityEntity {
     contractAddress: string;
 
   // relations
-  @ManyToOne(() => UserEntity, (user) => user.createdCommunities)
+  @ManyToOne(() => UserEntity, (user) => user.createdCommunities, { cascade: true })
     creator: UserEntity;
 
   @ManyToMany(() => UserEntity, { cascade: true })
