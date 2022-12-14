@@ -15,6 +15,8 @@ import * as httpContext from 'express-http-context';
 
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { CommentRepository } from './repository/comment.repository';
+import { CommunityRepository } from './repository/community.repository';
 import { JwtStrategy } from './infrastructure/middlewares/strategies/jwt.strategy';
 
 import { ApiConfigModule } from './infrastructure/config/api-config.module';
@@ -55,6 +57,8 @@ import { AdminController } from './controller/admin.controller';
 import { UserController } from './controller/user.controller';
 import { ENSController } from './controller/ens.controller';
 import { ZeroExController } from './controller/zeroex.controller';
+import { CommunityService } from './services/community.service';
+import { CommunityController } from './controller/community.controller';
 
 @Module({
   imports: [
@@ -94,6 +98,7 @@ import { ZeroExController } from './controller/zeroex.controller';
     UserController,
     ENSController,
     ZeroExController,
+    CommunityController,
   ],
   providers: [
     {
@@ -124,6 +129,7 @@ import { ZeroExController } from './controller/zeroex.controller';
     UserService,
     ENSService,
     ZeroExService,
+    CommunityService,
 
     JwtStrategy,
 
@@ -139,6 +145,8 @@ import { ZeroExController } from './controller/zeroex.controller';
     NftMetadataRepository,
     SubscriptionRepository,
     ZeroExRepository,
+    CommunityRepository,
+    CommentRepository,
   ],
 })
 export class AppModule implements NestModule {

@@ -29,6 +29,14 @@ async function bootstrap() {
     fs.mkdirSync('./public/token-images');
   }
 
+  if (!fs.existsSync('./public/community-content')) {
+    fs.mkdirSync('./public/community-content');
+  }
+
+  if (!fs.existsSync('./public/community-content/images')) {
+    fs.mkdirSync('./public/community-content/images');
+  }
+
   try {
     const typeORMconnection = app.get(DataSource);
     await typeORMconnection.runMigrations();

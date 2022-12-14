@@ -1,4 +1,3 @@
-import { WalletAddressDto } from './../dto/user/wallet-address.dto';
 import {
   Body,
   Controller,
@@ -11,6 +10,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { PostReactionsLookupDto } from 'src/dto/nft-posts/post-reactions-lookup.dto';
+import { CommunityIdDto } from 'src/dto/community/community-id.dto';
+import { WalletAddressDto } from '../dto/user/wallet-address.dto';
 
 import { FeedService } from '../services/feed.service';
 
@@ -20,7 +22,7 @@ import { ContentIdDto } from '../dto/nft-posts/content-id.dto';
 import { LensMirrorDto } from '../dto/nft-posts/lens-mirror.dto';
 import { ContentWithLensIdsDto } from '../dto/nft-posts/content-with-lens-id.dto';
 import { RepostDescriptionDto } from '../dto/repost/repost-description.dto';
-import { CommentMetadataDto } from '../dto/comments/comment-metadata.dto';
+import { CommentMetadataDto } from '../dto/comments/comment-data.dto';
 
 @Controller('content')
 export class FeedController {
@@ -41,11 +43,20 @@ export class FeedController {
     return this.feedService.getFilteredFeed(take, skip);
   }
 
+  @Get('/community/:communityId')
+  @UseGuards(AuthGuard())
+  public async getCommunityFeed(
+    @Query() { take, skip }: PagingData,
+      @Param() { communityId }: CommunityIdDto,
+  ): Promise<NftPostLookupDto[]> {
+    return this.feedService.getCommunityFeed(take, skip, communityId);
+  }
+
   @Get('published/:walletAddress')
   @UseGuards(AuthGuard())
   public async getPublished(
     @Query() { take, skip }: PagingData,
-    @Param() { walletAddress }: WalletAddressDto,
+      @Param() { walletAddress }: WalletAddressDto,
   ): Promise<NftPostLookupDto[]> {
     return this.feedService.getPublishedContent(take, skip, walletAddress);
   }
@@ -66,12 +77,20 @@ export class FeedController {
     return this.feedService.getContentMetadata(contentId);
   }
 
-  @Post('/comment/metadata')
+  @Get('/:contentId/reactions')
   @UseGuards(AuthGuard())
-  public async createCommentMetadata(
+  public async getPostReactions(
+    @Param() { contentId }: ContentIdDto,
+  ): Promise<PostReactionsLookupDto> {
+    return this.feedService.getPostReactions(contentId);
+  }
+
+  @Post('/comment/create')
+  @UseGuards(AuthGuard())
+  public async createComment(
     @Body() data: CommentMetadataDto,
   ): Promise<string> {
-    return this.feedService.createCommentMetadata(data);
+    return this.feedService.createComment(data);
   }
 
   @Post('/:contentId')
@@ -82,13 +101,29 @@ export class FeedController {
     return this.feedService.publishContent(contentId);
   }
 
-  @Post('/:lensId/repost/:newLensId')
+  @Post('/:postId/repost')
   @UseGuards(AuthGuard())
   public async repostContent(
-    @Param() { lensId, newLensId }: LensMirrorDto,
-    @Body() { description }: RepostDescriptionDto,
+    @Param() { postId }: LensMirrorDto,
+      @Body() { description }: RepostDescriptionDto,
+  ): Promise<string> {
+    return this.feedService.repostContent(postId, description);
+  }
+
+  @Post('/:postId/like')
+  @UseGuards(AuthGuard())
+  public async likeContent(
+    @Param() { postId }: LensMirrorDto,
   ): Promise<void> {
-    return this.feedService.repostContent(lensId, newLensId, description);
+    return this.feedService.likeOrUnlikePost(postId);
+  }
+
+  @Get('/:postId/is-liked')
+  @UseGuards(AuthGuard())
+  public async isLikedContent(
+    @Param() { postId }: LensMirrorDto,
+  ): Promise<boolean> {
+    return this.feedService.getIsPostLikedByUser(postId);
   }
 
   @Put('/:contentId/:lensId')

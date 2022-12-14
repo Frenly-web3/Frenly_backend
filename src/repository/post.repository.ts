@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, In, Not, Repository } from 'typeorm';
+import { CommunityEntity } from '../data/entity/community.entity';
 
 import { UserRepository } from './user.repository';
 import { NftTokenPostRepository } from './nft-token-post.repository';
@@ -55,7 +56,7 @@ export class PostRepository {
         createdAt: 'DESC',
       },
 
-      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
+      relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost', 'comments', 'likes', 'reposts'],
     });
   }
 
@@ -143,6 +144,36 @@ export class PostRepository {
 
       relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
     });
+  }
+
+  public async getCommunityFeed(
+    community: CommunityEntity,
+    communityMemberIds: number[],
+    take?: number,
+    skip?: number,
+
+  ): Promise<PostEntity[]> {
+    try {
+      return await this.repository.find({
+        where: {
+          owner: { id: In(communityMemberIds) },
+          status: PostStatusEnum.PUBLISHED,
+        // nftPost: { scAddress: community.contractAddress.toLowerCase() },
+        },
+
+        order: {
+          createdAt: 'DESC',
+        },
+
+        take,
+        skip,
+
+        relations: ['owner', 'nftPost', 'nftPost.metadata', 'zeroExPost'],
+      });
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
+    }
   }
 
   // Drafts
@@ -273,10 +304,26 @@ export class PostRepository {
   }
 
   public async save(entity: PostEntity): Promise<PostEntity> {
-    if (entity?.nftPost != null) {
-      await this.nftTokenPostRepository.save(entity.nftPost);
-    }
+    try {
+      if (entity?.nftPost != null) {
+        await this.nftTokenPostRepository.save(entity.nftPost);
+      }
 
-    return this.repository.save(entity);
+      return await this.repository.save(entity);
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
+    }
+  }
+
+  public async saveWithoutNftPostSave(entity: PostEntity): Promise<PostEntity> {
+    try {
+      await this.repository.save(entity);
+
+      return entity;
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
+    }
   }
 }

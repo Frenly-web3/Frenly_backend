@@ -41,6 +41,11 @@ export class UserRepository {
     return user;
   }
 
+  public async createDraftUser(data: UserDto): Promise<UserEntity> {
+    const user = this.repository.create(data);
+    return user;
+  }
+
   public async save(entity: UserEntity): Promise<UserEntity> {
     await this.repository.save(entity);
 
