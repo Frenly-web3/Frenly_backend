@@ -23,13 +23,16 @@ export class UserService {
 
   public async getUserInfo(walletAddress: string): Promise<UserDescriptionDto> {
     const user = await this.userRepository.getOneByWalletAddress(walletAddress.toLowerCase());
-    const subscriptions = await this.subscriptionRepository.getUserSubscribers(user.id);
+    const subscribers = await this.subscriptionRepository.getUserSubscribers(user.id);
+
+    const subscriptionsAmount = await this.subscriptionRepository.getUserSubscriptionsAmount(user.id);
 
     return {
       avatar: user?.avatar ?? null,
       username: user?.username ?? null,
       description: user?.description ?? null,
-      totalFollowers: subscriptions.length,
+      totalFollowers: subscribers.length,
+      totalSubscribers: subscriptionsAmount,
     };
   }
 

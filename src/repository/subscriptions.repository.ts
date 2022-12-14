@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
@@ -46,6 +46,25 @@ export class SubscriptionRepository {
     });
 
     return subscriptions.map((x) => x.respondent);
+  }
+
+  public async getUserSubscriptionsAmount(userId: number): Promise<number> {
+    try {
+      const subscriptionsAmount = await this.repository.count({
+        where: {
+          subscriber: {
+            id: userId,
+          },
+        },
+
+        relations: ['respondent', 'subscriber'],
+      });
+
+      return subscriptionsAmount;
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException();
+    }
   }
 
   public async createSubscription(respondentId: number, subscriberId: number): Promise<SubscriptionEntity> {
